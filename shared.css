@@ -176,6 +176,20 @@ body.game-theme{
 .game-theme .status-chip{border-radius:5px;border:1px solid rgba(225,196,91,.14)}
 
 .pixel-unit{transform-box:fill-box;transform-origin:center bottom;shape-rendering:crispEdges}
+.sprite-unit{pointer-events:none;shape-rendering:crispEdges}
+.sprite-viewport{overflow:hidden}
+.sprite-sheet-strip{background-repeat:no-repeat;background-position:0 0;image-rendering:pixelated}
+.sprite-unit-death{animation:sprite-unit-fade 900ms steps(5,end) forwards}
+.sprite-unit-hurt{animation:sprite-hit-flash 360ms steps(2,end)}
+.unit-weapon{filter:drop-shadow(0 1px 0 #080a08) drop-shadow(1px 0 0 #080a08)}
+.unit-weapon-head{stroke:#080a08;stroke-width:4px}
+.unit-weapon-orb{stroke:#080a08;stroke-width:4px}
+.weapon-projectile{filter:drop-shadow(0 0 4px rgba(245,230,168,.55))}
+.weapon-slash{opacity:.9;filter:drop-shadow(0 0 5px rgba(255,207,106,.6))}
+.weapon-cast-aura{fill:rgba(110,214,196,.08);stroke:rgba(110,214,196,.55);stroke-width:2;stroke-dasharray:4 4}
+@keyframes sprite-strip{to{background-position-x:calc(-1 * var(--sprite-shift))}}
+@keyframes sprite-hit-flash{0%,100%{opacity:1}45%{opacity:.72}72%{opacity:1}}
+@keyframes sprite-unit-fade{0%{opacity:1}72%{opacity:.85}100%{opacity:0}}
 .pixel-unit-shadow{fill:rgba(0,0,0,.42)}
 .unit-nameplate{font-size:15px;font-weight:800;fill:#f4ead0;paint-order:stroke;stroke:#070907;stroke-width:4px}
 .unit-hpplate{font-size:13px;font-weight:700;fill:#dfe7d6;paint-order:stroke;stroke:#070907;stroke-width:4px}

@@ -5,6 +5,57 @@
   const svgNS = 'http://www.w3.org/2000/svg';
   const NO_ACCESSORY = '__none__';
   const DEFAULT_MATCH_OPTIONS = { blackHoleEnabled: true, drawOpening: 6, drawPerTurn: 2 };
+  const SPRITE_PROFILES = {
+    'knight-blue': {
+      frameWidth: 120, frameHeight: 80, scale: 1.22,
+      animations: {
+        idle: { file: 'assets/sprites/knight-blue/idle.png', frames: 10, duration: 950, loop: true },
+        run: { file: 'assets/sprites/knight-blue/run.png', frames: 10, duration: 720, loop: true },
+        attack: { file: 'assets/sprites/knight-blue/attack.png', frames: 4, duration: 420 },
+        attackHeavy: { file: 'assets/sprites/knight-blue/attack-heavy.png', frames: 6, duration: 560 },
+        attackCombo: { file: 'assets/sprites/knight-blue/attack-combo.png', frames: 10, duration: 760 },
+        cast: { file: 'assets/sprites/knight-blue/cast.png', frames: 6, duration: 620 },
+        hurt: { file: 'assets/sprites/knight-blue/hurt.png', frames: 1, duration: 360 },
+        death: { file: 'assets/sprites/knight-blue/death.png', frames: 10, duration: 900 }
+      }
+    },
+    'knight-rose': {
+      frameWidth: 120, frameHeight: 80, scale: 1.22,
+      animations: {
+        idle: { file: 'assets/sprites/knight-rose/idle.png', frames: 10, duration: 950, loop: true },
+        run: { file: 'assets/sprites/knight-rose/run.png', frames: 10, duration: 720, loop: true },
+        attack: { file: 'assets/sprites/knight-rose/attack.png', frames: 4, duration: 420 },
+        attackHeavy: { file: 'assets/sprites/knight-rose/attack-heavy.png', frames: 6, duration: 560 },
+        attackCombo: { file: 'assets/sprites/knight-rose/attack-combo.png', frames: 10, duration: 760 },
+        cast: { file: 'assets/sprites/knight-rose/cast.png', frames: 6, duration: 620 },
+        hurt: { file: 'assets/sprites/knight-rose/hurt.png', frames: 1, duration: 360 },
+        death: { file: 'assets/sprites/knight-rose/death.png', frames: 10, duration: 900 }
+      }
+    },
+    samurai: {
+      frameWidth: 96, frameHeight: 96, scale: 1.35,
+      animations: {
+        idle: { file: 'assets/sprites/samurai/idle.png', frames: 10, duration: 950, loop: true },
+        run: { file: 'assets/sprites/samurai/run.png', frames: 16, duration: 780, loop: true },
+        attack: { file: 'assets/sprites/samurai/attack.png', frames: 7, duration: 560 },
+        attackHeavy: { file: 'assets/sprites/samurai/attack.png', frames: 7, duration: 640 },
+        attackCombo: { file: 'assets/sprites/samurai/attack.png', frames: 7, duration: 620 },
+        cast: { file: 'assets/sprites/samurai/attack.png', frames: 7, duration: 620 },
+        hurt: { file: 'assets/sprites/samurai/hurt.png', frames: 4, duration: 360 },
+        death: { file: 'assets/sprites/samurai/hurt.png', frames: 4, duration: 800 }
+      }
+    }
+  };
+  const MARTIAL_SPRITE_PROFESSIONS = new Set(['rogue', 'swordsman', '武僧']);
+  const WEAPON_PRESENTATION = {
+    greatsword: { kind: 'greatsword', anim: 'attackHeavy', color: '#e8e4d7', accent: '#b98a44' },
+    longbow: { kind: 'bow', anim: 'attack', color: '#b98554', accent: '#e8d28d' },
+    dagger: { kind: 'dagger', anim: 'attack', color: '#d9dee6', accent: '#7fd6c3' },
+    warhammer: { kind: 'hammer', anim: 'attackHeavy', color: '#c8c4b8', accent: '#8d6a43' },
+    wand: { kind: 'wand', anim: 'cast', color: '#8ed1e8', accent: '#e9d46f' },
+    twin_blades: { kind: 'dual_blades', anim: 'attackCombo', color: '#d9dee6', accent: '#ffcf6a' },
+    totem: { kind: 'totem', anim: 'cast', color: '#a7764f', accent: '#73d6a2' }
+  };
   const state = {
     ruleset: null,
     players: [],
@@ -474,6 +525,39 @@
     return Object.assign(base, deep(trans.override || {}));
   }
 
+  function weaponPresentation(player){
+    return WEAPON_PRESENTATION[player?.weaponKey] || { kind: 'sword', anim: 'attack', color: '#d9dee6', accent: '#e1c45b' };
+  }
+
+  function weaponAttackAnim(player){
+    return weaponPresentation(player).anim || 'attack';
+  }
+
+  function spriteProfileKeyFor(player){
+    if (MARTIAL_SPRITE_PROFESSIONS.has(player?.professionKey)) return 'samurai';
+    return player?.id === 2 ? 'knight-rose' : 'knight-blue';
+  }
+
+  function spriteProfileFor(player){
+    return SPRITE_PROFILES[spriteProfileKeyFor(player)] || null;
+  }
+
+  function spriteAnimFor(player, anim){
+    const profile = spriteProfileFor(player);
+    if (!profile) return null;
+    const keyName = (anim === 'attackHeavy' || anim === 'attackCombo') ? anim : (anim || 'idle');
+    return profile.animations[keyName] || profile.animations.attack || profile.animations.idle || null;
+  }
+
+  function spriteAnimDuration(player, anim, fallback = 520){
+    return Number(spriteAnimFor(player, anim)?.duration || fallback);
+  }
+
+  function vectorAnimName(anim){
+    if (anim === 'attackHeavy' || anim === 'attackCombo') return 'attack';
+    return anim || 'idle';
+  }
+
 
   function resolvePlayerNotation(player, notation){
     if (notation === null || notation === undefined) return notation;
@@ -584,16 +668,17 @@ function finalizePlayerState(player){
   }
 }
 
-function playUnitAnim(player, anim, duration = 520){
+function playUnitAnim(player, anim, duration){
   if(!player) return;
   if(player.animTimer) clearTimeout(player.animTimer);
   player.anim = anim || 'idle';
+  const animDuration = Number(duration || spriteAnimDuration(player, player.anim, 520));
   if(state.board?.length && $('board')) renderBoard();
   player.animTimer = setTimeout(() => {
     player.anim = 'idle';
     player.animTimer = null;
     if(state.board?.length && $('board')) renderBoard();
-  }, duration);
+  }, animDuration);
 }
 
 function takePureDamage(player, rawDamage){
@@ -611,7 +696,7 @@ function dealDamage(attacker, target, rawDamage, meta){
   const allowReactions = info.allowReactions !== false;
   let damage = Math.max(0, Number(rawDamage || 0));
   if (!target || !target.alive) return { rawDamage: damage, blocked: 0, finalDamage: 0, dodged: false };
-  if(attacker && attacker !== target) playUnitAnim(attacker, info.anim || 'attack', 520);
+  if(attacker && attacker !== target) playUnitAnim(attacker, info.anim || weaponAttackAnim(attacker));
 
   if (damage > 0 && (target.buffs?.dodgeNextDamage || 0) > 0) {
     target.buffs.dodgeNextDamage = Math.max(0, Number(target.buffs.dodgeNextDamage || 0) - 1);
@@ -1073,7 +1158,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(p.buffs.nextBasicDie) dmg += await showDice('额外骰', resolvePlayerNotation(p, p.buffs.nextBasicDie));
     if(p.professionKey==='rogue' && (target.statuses.slow || target.statuses.disarm || target.statuses.sheep)) dmg += await showDice('盗贼被动', '1d4');
     if(p.professionKey==='hunter' && target.marked){ dmg += 2; target.marked = false; log(`${p.label} 的猎人被动触发，追加 2 伤害并移除标记。`); }
-    const damageResult = dealDamage(p, target, dmg, { sourceName: b.name || '普通攻击' });
+    const damageResult = dealDamage(p, target, dmg, { sourceName: b.name || '普通攻击', anim: weaponAttackAnim(p) });
     if(!damageResult.dodged){
       if(p.professionKey==='shaman' && p.profession.passives.shaman_passive){ target.statuses.burn = 2; log(`${target.label} 被点燃。`); }
       if(b.apply?.slow) target.statuses.slow = b.apply.slow;
@@ -1298,7 +1383,8 @@ async function applyRewardList(player, rewards, labelPrefix){
       if(cardDef.config.conditionalBonus?.condition==='moved_this_turn' && p.turn.movedDistance>0) dmg += await showDice('条件追加', resolvePlayerNotation(p, cardDef.config.conditionalBonus.bonusDamage));
       if(cardDef.config.conditionalBonus?.condition==='target_controlled' && (target.statuses.slow||target.statuses.disarm||target.statuses.sheep)) dmg += Number(cardDef.config.conditionalBonus.bonusFlat || 0);
       if(cardDef.config.conditionalBonus?.condition==='target_hp_lte' && target.hp <= Number(cardDef.config.conditionalBonus.threshold||0)) dmg += await showDice('斩杀追加', resolvePlayerNotation(p, cardDef.config.conditionalBonus.bonusDamage));
-      const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardDef.config?.spell ? 'cast' : 'attack' });
+      const cardAnim = cardDef.config?.spell ? 'cast' : (handItem.origin === '武器技能' ? weaponAttackAnim(p) : 'attack');
+      const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardAnim });
       if(cardDef.config.buffBasic) p.buffs.nextBasicFlat = (p.buffs.nextBasicFlat||0) + Number(cardDef.config.buffBasic||0);
       if(cardDef.config.gainBlock) p.block += await showDice('获得格挡', cardDef.config.gainBlock);
       if(!damageResult.dodged){
@@ -1344,7 +1430,8 @@ async function applyRewardList(player, rewards, labelPrefix){
       const targets = state.players.filter(x=>x.alive && x.id!==p.id && dist(x.pos,tile)<=Number(cardDef.config.radius||1));
       for(const target of targets){
         let dmg = await showDice(cardDef.name, resolvePlayerNotation(p, cardDef.config.damage));
-        const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardDef.config?.spell ? 'cast' : 'attack' });
+        const cardAnim = cardDef.config?.spell ? 'cast' : (handItem.origin === '武器技能' ? weaponAttackAnim(p) : 'attack');
+        const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardAnim });
         if(!damageResult.dodged && cardDef.config.apply?.slow) target.statuses.slow = cardDef.config.apply.slow;
         log(`${p.label} 的 ${cardDef.name} 命中 ${target.label}，原始伤害 ${dmg}，实际伤害 ${damageResult.finalDamage}，目标当前生命 ${target.hp}，格挡 ${target.block}。`);
       }
@@ -1536,14 +1623,163 @@ async function applyRewardList(player, rewards, labelPrefix){
     g.appendChild(r);
   }
 
+  function setSvgAttrs(el, attrs){
+    Object.entries(attrs).forEach(([name, value]) => {
+      if(value !== null && value !== undefined) el.setAttribute(name, value);
+    });
+    return el;
+  }
+
+  function appendUnitLabels(g, p, x, nameY, hpY){
+    const name = document.createElementNS(svgNS, 'text');
+    setSvgAttrs(name, { x, y: nameY, 'text-anchor': 'middle', class: 'unit-nameplate' });
+    name.textContent = `P${p.id} ${I18N().entity('profession', p.professionKey, p.profession.name)}`;
+    g.appendChild(name);
+
+    const plate = document.createElementNS(svgNS, 'text');
+    setSvgAttrs(plate, { x, y: hpY, 'text-anchor': 'middle', class: 'unit-hpplate' });
+    plate.textContent = `HP ${p.hp} / 护 ${p.block}`;
+    g.appendChild(plate);
+  }
+
+  function appendWeaponLine(g, x1, y1, x2, y2, width, color, extraClass = ''){
+    const line = document.createElementNS(svgNS, 'line');
+    setSvgAttrs(line, {
+      x1, y1, x2, y2,
+      class: `unit-weapon ${extraClass}`.trim(),
+      stroke: color,
+      'stroke-width': width,
+      'stroke-linecap': 'square'
+    });
+    g.appendChild(line);
+    return line;
+  }
+
+  function renderWeaponOverlay(g, p, anim){
+    const weapon = weaponPresentation(p);
+    const isAction = ['attack', 'attackHeavy', 'attackCombo', 'cast'].includes(anim);
+    const push = isAction ? 8 : 0;
+    const color = weapon.color;
+    const accent = weapon.accent;
+    const cls = `weapon-${weapon.kind}`;
+
+    if(weapon.kind === 'greatsword'){
+      appendWeaponLine(g, 18 + push, -42, 45 + push, -82, 7, color, cls);
+      appendWeaponLine(g, 12 + push, -39, 26 + push, -49, 4, accent, cls);
+    } else if(weapon.kind === 'hammer'){
+      appendWeaponLine(g, 18 + push, -42, 40 + push, -68, 6, color, cls);
+      const head = document.createElementNS(svgNS, 'rect');
+      setSvgAttrs(head, { x: 34 + push, y: -78, width: 24, height: 12, rx: 1, fill: accent, class: `unit-weapon-head ${cls}` });
+      g.appendChild(head);
+    } else if(weapon.kind === 'bow'){
+      const bow = document.createElementNS(svgNS, 'path');
+      setSvgAttrs(bow, { d: `M${24 + push},-72 Q${48 + push},-49 ${24 + push},-26`, fill: 'none', stroke: color, 'stroke-width': 4, class: `unit-weapon ${cls}` });
+      g.appendChild(bow);
+      appendWeaponLine(g, 25 + push, -70, 25 + push, -28, 2, accent, cls);
+      if(isAction){
+        appendWeaponLine(g, 20 + push, -49, 62 + push, -49, 3, '#f5e6a8', `${cls} weapon-projectile`);
+        const arrow = document.createElementNS(svgNS, 'polygon');
+        setSvgAttrs(arrow, { points: `${64 + push},-49 ${56 + push},-54 ${56 + push},-44`, fill: '#f5e6a8', class: `weapon-projectile ${cls}` });
+        g.appendChild(arrow);
+      }
+    } else if(weapon.kind === 'dagger'){
+      appendWeaponLine(g, 15 + push, -43, 34 + push, -58, 4, color, cls);
+      appendWeaponLine(g, 10 + push, -40, 22 + push, -48, 3, accent, cls);
+    } else if(weapon.kind === 'dual_blades'){
+      appendWeaponLine(g, 14 + push, -43, 37 + push, -62, 4, color, cls);
+      appendWeaponLine(g, 3 + push, -41, 23 + push, -57, 4, color, cls);
+      if(isAction) appendWeaponLine(g, 24 + push, -62, 54 + push, -76, 2, accent, `${cls} weapon-slash`);
+    } else if(weapon.kind === 'wand'){
+      appendWeaponLine(g, 18 + push, -40, 42 + push, -72, 4, color, cls);
+      const orb = document.createElementNS(svgNS, 'circle');
+      setSvgAttrs(orb, { cx: 45 + push, cy: -75, r: isAction ? 8 : 5, fill: accent, class: `unit-weapon-orb ${cls}` });
+      g.appendChild(orb);
+    } else if(weapon.kind === 'totem'){
+      appendWeaponLine(g, 20 + push, -34, 34 + push, -72, 7, color, cls);
+      const head = document.createElementNS(svgNS, 'rect');
+      setSvgAttrs(head, { x: 26 + push, y: -79, width: 18, height: 16, rx: 1, fill: accent, class: `unit-weapon-head ${cls}` });
+      g.appendChild(head);
+    } else {
+      appendWeaponLine(g, 18 + push, -42, 40 + push, -76, 5, color, cls);
+    }
+
+    if(isAction && (weapon.kind === 'wand' || weapon.kind === 'totem')){
+      const aura = document.createElementNS(svgNS, 'circle');
+      setSvgAttrs(aura, { cx: 45 + push, cy: -74, r: 20, class: 'weapon-cast-aura' });
+      g.insertBefore(aura, g.firstChild);
+    }
+  }
+
+  function renderSpriteUnit(svg, p, x, y){
+    const profile = spriteProfileFor(p);
+    const animName = p.anim || 'idle';
+    const anim = spriteAnimFor(p, animName);
+    if(!profile || !anim) return false;
+
+    const frameW = profile.frameWidth;
+    const frameH = profile.frameHeight;
+    const scale = profile.scale || 1;
+    const displayW = frameW * scale;
+    const displayH = frameH * scale;
+    const frameCount = Math.max(1, Number(anim.frames || 1));
+    const steps = Math.max(1, frameCount - 1);
+    const shift = frameW * Math.max(0, frameCount - 1);
+    const duration = Number(anim.duration || 600);
+    const loop = anim.loop ? 'infinite' : '1';
+    const footOffset = profile.frameHeight === 96 ? 18 : 20;
+
+    const g = document.createElementNS(svgNS, 'g');
+    setSvgAttrs(g, {
+      class: `sprite-unit sprite-unit-p${p.id} sprite-unit-${vectorAnimName(animName)} sprite-profile-${spriteProfileKeyFor(p)} weapon-${weaponPresentation(p).kind}`,
+      'data-profession': p.professionKey,
+      'data-weapon': p.weaponKey
+    });
+
+    const shadow = document.createElementNS(svgNS, 'ellipse');
+    setSvgAttrs(shadow, { cx: x, cy: y + 9, rx: Math.max(28, displayW * .22), ry: 9, class: 'pixel-unit-shadow' });
+    g.appendChild(shadow);
+
+    const body = document.createElementNS(svgNS, 'g');
+    body.setAttribute('class', 'sprite-body');
+    body.setAttribute('transform', p.id === 2 ? `translate(${x} ${y}) scale(-1 1)` : `translate(${x} ${y})`);
+
+    const fo = document.createElementNS(svgNS, 'foreignObject');
+    setSvgAttrs(fo, { x: -displayW / 2, y: -displayH + footOffset, width: displayW, height: displayH, class: 'sprite-viewport' });
+    const strip = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+    strip.className = 'sprite-sheet-strip';
+    strip.style.width = `${frameW}px`;
+    strip.style.height = `${frameH}px`;
+    strip.style.backgroundImage = `url("${anim.file}")`;
+    strip.style.backgroundSize = `${frameW * frameCount}px ${frameH}px`;
+    strip.style.transform = `scale(${scale})`;
+    strip.style.transformOrigin = 'top left';
+    strip.style.setProperty('--sprite-shift', `${shift}px`);
+    if(frameCount > 1) strip.style.animation = `sprite-strip ${duration}ms steps(${steps}, end) ${loop} forwards`;
+    fo.appendChild(strip);
+    body.appendChild(fo);
+    renderWeaponOverlay(body, p, animName);
+    g.appendChild(body);
+
+    if(animName === 'cast'){
+      const aura = document.createElementNS(svgNS, 'circle');
+      setSvgAttrs(aura, { cx: x, cy: y - 48, r: 34, class: 'pixel-cast-aura' });
+      g.insertBefore(aura, shadow.nextSibling);
+    }
+
+    appendUnitLabels(g, p, x, y - displayH + 8, y + 38);
+    svg.appendChild(g);
+    return true;
+  }
+
   function renderPixelUnit(svg, p, x, y){
+    if(renderSpriteUnit(svg, p, x, y)) return;
     const pal = unitPalette(p);
     const [skin, cloth, accent, outline, shine] = pal;
     const s = 4;
     const bx = x - 30;
     const by = y - 78;
     const dir = p.id === 1 ? 1 : -1;
-    const anim = p.anim || 'idle';
+    const anim = vectorAnimName(p.anim);
     const g = document.createElementNS(svgNS, 'g');
     g.setAttribute('class', `pixel-unit pixel-unit-p${p.id} pixel-unit-${anim}`);
     g.setAttribute('data-profession', p.professionKey);
@@ -1593,21 +1829,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       g.insertBefore(aura, shadow.nextSibling);
     }
 
-    const name = document.createElementNS(svgNS, 'text');
-    name.setAttribute('x', x);
-    name.setAttribute('y', y - 86);
-    name.setAttribute('text-anchor', 'middle');
-    name.setAttribute('class', 'unit-nameplate');
-    name.textContent = `P${p.id} ${I18N().entity('profession', p.professionKey, p.profession.name)}`;
-    g.appendChild(name);
-
-    const plate = document.createElementNS(svgNS, 'text');
-    plate.setAttribute('x', x);
-    plate.setAttribute('y', y + 38);
-    plate.setAttribute('text-anchor', 'middle');
-    plate.setAttribute('class', 'unit-hpplate');
-    plate.textContent = `HP ${p.hp} / 护 ${p.block}`;
-    g.appendChild(plate);
+    appendUnitLabels(g, p, x, y - 86, y + 38);
 
     svg.appendChild(g);
   }
