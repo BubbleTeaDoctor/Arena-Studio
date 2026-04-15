@@ -297,6 +297,8 @@
       counters: { heal_count:0 },
       negativeQueue: [],
       summons: { skeleton:0, bone_dragon:0 },
+      anim: 'idle',
+      animTimer: null,
       marked: false,
     };
   }
@@ -396,7 +398,7 @@
     if (tok.kind === 'trap_once_negative'){
       if (tok.damage) {
         const dmg = loggedRoll(`${player.label} ${tok.name || '陷阱'}伤害`, resolvePlayerNotation(player, tok.damage));
-        player.hp -= dmg;
+        takePureDamage(player, dmg);
         log(`${player.label} 触发 ${tok.name || '陷阱'}，受到 ${dmg} 伤害。`);
       }
       if (tok.insertCardKey) insertNegativeCardsToDeck(player, tok.insertCardKey, tok.insertCount || 1);
@@ -418,13 +420,18 @@
         if (target){
           if (tok.damage){
             const dmg = loggedRoll(`${tok.name || '炮塔'} 攻击`, resolvePlayerNotation(player, tok.damage));
-            target.hp -= Math.max(0, dmg - target.block);
+            const finalDamage = Math.max(0, dmg - target.block);
+            target.hp -= finalDamage;
             target.block = Math.max(0, target.block - dmg);
+            if (finalDamage > 0){
+              if (target.hp <= 0) finalizePlayerState(target);
+              else playUnitAnim(target, 'hurt', 460);
+            }
             log(`${tok.name || '炮塔'} 命中 ${target.label}，原始伤害 ${dmg}，目标当前生命 ${target.hp}，格挡 ${target.block}。`);
           }
           if (tok.insertCardKey) insertNegativeCardsToDeck(target, tok.insertCardKey, tok.insertCount || 1);
           applyTokenControl(target, tok);
-          if (target.hp <= 0){ target.hp = 0; target.alive = false; state.winner = player.id; }
+          if (target.hp <= 0){ finalizePlayerState(target); state.winner = player.id; }
         }
         if (tok.durationTurns != null){
           tok.durationTurns = Number(tok.durationTurns || 0) - 1;
@@ -570,10 +577,32 @@ function maybeTriggerReactiveMoveOnTargeted(attacker, target, source, sourceName
 function finalizePlayerState(player){
   if (player.hp <= 0){
     player.hp = 0;
+    if(player.alive) playUnitAnim(player, 'death', 900);
     player.alive = false;
     const living = state.players.filter(x => x.alive);
     if (living.length === 1) state.winner = living[0].id;
   }
+}
+
+function playUnitAnim(player, anim, duration = 520){
+  if(!player) return;
+  if(player.animTimer) clearTimeout(player.animTimer);
+  player.anim = anim || 'idle';
+  if(state.board?.length && $('board')) renderBoard();
+  player.animTimer = setTimeout(() => {
+    player.anim = 'idle';
+    player.animTimer = null;
+    if(state.board?.length && $('board')) renderBoard();
+  }, duration);
+}
+
+function takePureDamage(player, rawDamage){
+  const damage = Math.max(0, Number(rawDamage || 0));
+  if(!player || !player.alive || damage <= 0) return 0;
+  player.hp -= damage;
+  if(player.hp <= 0) finalizePlayerState(player);
+  else playUnitAnim(player, 'hurt', 460);
+  return damage;
 }
 
 function dealDamage(attacker, target, rawDamage, meta){
@@ -582,6 +611,7 @@ function dealDamage(attacker, target, rawDamage, meta){
   const allowReactions = info.allowReactions !== false;
   let damage = Math.max(0, Number(rawDamage || 0));
   if (!target || !target.alive) return { rawDamage: damage, blocked: 0, finalDamage: 0, dodged: false };
+  if(attacker && attacker !== target) playUnitAnim(attacker, info.anim || 'attack', 520);
 
   if (damage > 0 && (target.buffs?.dodgeNextDamage || 0) > 0) {
     target.buffs.dodgeNextDamage = Math.max(0, Number(target.buffs.dodgeNextDamage || 0) - 1);
@@ -593,6 +623,7 @@ function dealDamage(attacker, target, rawDamage, meta){
   const finalDamage = Math.max(0, damage - blocked);
   target.block = Math.max(0, Number(target.block || 0) - damage);
   target.hp -= finalDamage;
+  if(finalDamage > 0) playUnitAnim(target, target.hp <= 0 ? 'death' : 'hurt', target.hp <= 0 ? 900 : 460);
 
   if (allowReactions && finalDamage > 0) {
     if ((target.buffs?.healOnDamagedCharges || 0) > 0 && target.buffs?.healOnDamaged) {
@@ -857,17 +888,17 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(p.statuses.dot){
       const cfg = p.statuses.dot;
       const dmg = loggedRoll(`${p.label} DOT`, cfg.damagePerTick || '1');
-      p.hp -= dmg; log(`${p.label} 受到 DOT ${dmg} 伤害。`);
+      takePureDamage(p, dmg); log(`${p.label} 受到 DOT ${dmg} 伤害。`);
       cfg.durationTurns -= 1;
       if(cfg.durationTurns<=0) p.statuses.dot = null;
     }
-    if(p.statuses.burn>0){ p.hp -= 2; p.statuses.burn -= 1; log(`${p.label} 受到点燃 2 伤害。`); }
+    if(p.statuses.burn>0){ takePureDamage(p, 2); p.statuses.burn -= 1; log(`${p.label} 受到点燃 2 伤害。`); }
     const enemy = enemyOf(p);
     if(p.professionKey==='necro' && enemy){
       let bonus = 0;
       bonus += loggedRollBatch(`${p.label} 的骷髅自动伤害`, '1d4', (p.summons?.skeleton||0));
       bonus += loggedRollBatch(`${p.label} 的骨龙自动伤害`, '1d8', (p.summons?.bone_dragon||0));
-      if(bonus>0){ enemy.hp -= bonus; log(`${p.label} 的亡灵随从在回合开始合计造成 ${bonus} 伤害。`); if(enemy.hp<=0){ enemy.hp=0; enemy.alive=false; state.winner=p.id; render(); setHint('对局结束'); return; } }
+      if(bonus>0){ takePureDamage(enemy, bonus); log(`${p.label} 的亡灵随从在回合开始合计造成 ${bonus} 伤害。`); if(enemy.hp<=0){ state.winner=p.id; render(); setHint('对局结束'); return; } }
     }
     processMapTokensAtTurnStart(p);
     if(p.hp<=0){ p.hp=0; p.alive=false; state.winner = enemyOf(p)?.id || 1; render(); setHint('对局结束'); return; }
@@ -900,12 +931,12 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function enterTile(player){
     const t = state.boardMap.get(key(player.pos)); if(!t) return;
-    if(isSpikeDangerTile(player.pos)){ const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8'); player.hp -= dmg; log(`${player.label} 触碰尖刺柱危险区域，受到 ${dmg} 伤害。`); }
-    if(isTokenDangerTile(player.pos)){ const tok = getMapToken(player.pos) || neighbors(player.pos).map(getMapToken).find(Boolean); const expr = tok?.damage || '2d8'; const dmg = loggedRoll(`${player.label} ${tok?.name || '危险区'}伤害`, resolvePlayerNotation(player, expr)); player.hp -= dmg; log(`${player.label} 触碰 ${tok?.name || '危险区'}，受到 ${dmg} 伤害。`); }
-    if(isBlackHoleEnabled() && t.type==='center'){ const dmg = loggedRoll(`${player.label} 黑洞中心伤害`, '2d8'); player.hp -= dmg; log(`${player.label} 被黑洞中心撕扯，受到 ${dmg} 伤害。`); }
+    if(isSpikeDangerTile(player.pos)){ const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 触碰尖刺柱危险区域，受到 ${dmg} 伤害。`); }
+    if(isTokenDangerTile(player.pos)){ const tok = getMapToken(player.pos) || neighbors(player.pos).map(getMapToken).find(Boolean); const expr = tok?.damage || '2d8'; const dmg = loggedRoll(`${player.label} ${tok?.name || '危险区'}伤害`, resolvePlayerNotation(player, expr)); takePureDamage(player, dmg); log(`${player.label} 触碰 ${tok?.name || '危险区'}，受到 ${dmg} 伤害。`); }
+    if(isBlackHoleEnabled() && t.type==='center'){ const dmg = loggedRoll(`${player.label} 黑洞中心伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 被黑洞中心撕扯，受到 ${dmg} 伤害。`); }
     const trap = state.traps.get(key(player.pos));
     if(trap && trap.ownerId !== player.id){
-      const dmg = loggedRoll(`${player.label} 陷阱伤害`, '2d6'); player.hp -= dmg; player.statuses.slow = 1;
+      const dmg = loggedRoll(`${player.label} 陷阱伤害`, '2d6'); takePureDamage(player, dmg); player.statuses.slow = 1;
       log(`${player.label} 触发陷阱，受到 ${dmg} 伤害并减速。`);
       state.traps.delete(key(player.pos));
     }
@@ -920,13 +951,13 @@ async function applyRewardList(player, rewards, labelPrefix){
     const passive = Object.values(p.profession.passives || {})[0];
     if (!passive) return;
     if (passive.template === 'life_for_card_draw_once_per_turn'){
+      playUnitAnim(p, 'cast', 620);
       const lifeCost = Number(passive.config?.lifeCost || 0);
       const drawCount = Number(passive.config?.drawCount || 1);
       p.hp = Math.max(0, p.hp - lifeCost);
       log(`${p.label} 发动 ${passive.name || '职业被动'}，支付 ${lifeCost} 点生命。`);
       if (p.hp <= 0){
-        p.alive = false;
-        p.hp = 0;
+        finalizePlayerState(p);
         state.winner = enemyOf(p)?.id || 1;
         finishAfterAction();
         return;
@@ -1142,6 +1173,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='self_buff'){
+      playUnitAnim(p, 'cast', 620);
       if(cardDef.config.heal){
         const heal = typeof cardDef.config.heal==='string' && cardDef.config.heal.includes('d') ? await showDice('治疗', cardDef.config.heal) : Number(cardDef.config.heal||0);
         p.hp = Math.min(p.maxHp, p.hp + heal);
@@ -1178,6 +1210,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='grant_multiple_buffs'){
+      playUnitAnim(p, 'cast', 620);
       await applyRewardList(p, cardDef.config.rewardList || [], cardDef.name);
       if(cardDef.config.consumeOn === 'next_spell_hit') p.buffs.spellImmune = true;
       log(`${p.label} 使用了 ${cardDef.name}，直接获得多个增益。当前生命 ${p.hp}，格挡 ${p.block}。`);
@@ -1186,6 +1219,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='transform_basic_attack'){
+      playUnitAnim(p, 'cast', 620);
       p.buffs.basicTransform = {
         consumeOn: cardDef.config.consumeOn || 'next_basic_attack',
         durationTurns: Number(cardDef.config.durationTurns || 1),
@@ -1204,6 +1238,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='teleport' && tile){
+      playUnitAnim(p, 'cast', 520);
       p.turn.move = true;
       p.turn.movedDistance = dist(p.pos, tile);
       p.pos = deep(tile);
@@ -1214,6 +1249,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='create_map_token' && tile){
+      playUnitAnim(p, 'cast', 520);
       createMapTokenFromCard(p, tile, cardDef);
       finishAfterAction();
       return;
@@ -1262,7 +1298,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       if(cardDef.config.conditionalBonus?.condition==='moved_this_turn' && p.turn.movedDistance>0) dmg += await showDice('条件追加', resolvePlayerNotation(p, cardDef.config.conditionalBonus.bonusDamage));
       if(cardDef.config.conditionalBonus?.condition==='target_controlled' && (target.statuses.slow||target.statuses.disarm||target.statuses.sheep)) dmg += Number(cardDef.config.conditionalBonus.bonusFlat || 0);
       if(cardDef.config.conditionalBonus?.condition==='target_hp_lte' && target.hp <= Number(cardDef.config.conditionalBonus.threshold||0)) dmg += await showDice('斩杀追加', resolvePlayerNotation(p, cardDef.config.conditionalBonus.bonusDamage));
-      const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name });
+      const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardDef.config?.spell ? 'cast' : 'attack' });
       if(cardDef.config.buffBasic) p.buffs.nextBasicFlat = (p.buffs.nextBasicFlat||0) + Number(cardDef.config.buffBasic||0);
       if(cardDef.config.gainBlock) p.block += await showDice('获得格挡', cardDef.config.gainBlock);
       if(!damageResult.dodged){
@@ -1308,7 +1344,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       const targets = state.players.filter(x=>x.alive && x.id!==p.id && dist(x.pos,tile)<=Number(cardDef.config.radius||1));
       for(const target of targets){
         let dmg = await showDice(cardDef.name, resolvePlayerNotation(p, cardDef.config.damage));
-        const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name });
+        const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardDef.config?.spell ? 'cast' : 'attack' });
         if(!damageResult.dodged && cardDef.config.apply?.slow) target.statuses.slow = cardDef.config.apply.slow;
         log(`${p.label} 的 ${cardDef.name} 命中 ${target.label}，原始伤害 ${dmg}，实际伤害 ${damageResult.finalDamage}，目标当前生命 ${target.hp}，格挡 ${target.block}。`);
       }
@@ -1465,15 +1501,115 @@ async function applyRewardList(player, rewards, labelPrefix){
       }
       svg.appendChild(g);
     });
-    state.players.filter(p=>p.alive).forEach(p=>{
+    state.players.filter(p=>p.alive || p.anim === 'death').forEach(p=>{
       const {x,y}=hexToPixel(p.pos);
-      const c=document.createElementNS(svgNS,'circle');
-      c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r',22); c.setAttribute('fill',p.color); c.setAttribute('class','unit-circle');
-      svg.appendChild(c);
-      ['P'+p.id, `HP ${p.hp} / 格挡 ${p.block}`].forEach((txt,idx)=>{
-        const t=document.createElementNS(svgNS,'text'); t.setAttribute('x',x); t.setAttribute('y', idx===0?y+5:y+36); t.setAttribute('text-anchor','middle'); if(idx===0) t.setAttribute('class','unit-label'); t.textContent=txt; svg.appendChild(t);
-      });
+      renderPixelUnit(svg, p, x, y);
     });
+  }
+
+  function unitPalette(player){
+    const map = {
+      warrior: ['#f2d7a0','#8b2d32','#d2a44d','#2b1518','#f1f1e6'],
+      mage: ['#e8d9be','#3c5f9d','#8ed1e8','#17213c','#f3f1ff'],
+      rogue: ['#d9bd94','#3e7f56','#c5cf75','#14261b','#edf8de'],
+      priest: ['#f1d6b8','#d8d2bd','#e6c65f','#2b2e34','#ffffff'],
+      shaman: ['#d8bd93','#4f8a72','#7cc0c0','#1a2d2a','#edf7e9'],
+      necro: ['#c8d0bd','#4f5967','#a7d66d','#17201b','#d8ffe4'],
+      warlock: ['#d2b092','#673a76','#cf6dc6','#211426','#f6e6ff'],
+      swordsman: ['#e2c199','#5e6675','#d7dce4','#1b1f29','#ffffff'],
+      hunter: ['#d6b98d','#44633d','#c9954a','#172514','#eff5d6'],
+      '武僧': ['#e8c28f','#a74833','#f0d06d','#251710','#fff7d0'],
+    };
+    const fallback = player.id === 1 ? ['#f2d0a1','#3f6f8f','#8ec5ff','#132432','#f8fbff'] : ['#eac09f','#8e4056','#ff8aa8','#32151f','#fff4f7'];
+    return map[player.professionKey] || fallback;
+  }
+
+  function addPixelRect(g, px, py, w, h, color, opacity = 1){
+    const r = document.createElementNS(svgNS, 'rect');
+    r.setAttribute('x', px);
+    r.setAttribute('y', py);
+    r.setAttribute('width', w);
+    r.setAttribute('height', h);
+    r.setAttribute('fill', color);
+    if(opacity !== 1) r.setAttribute('opacity', opacity);
+    r.setAttribute('shape-rendering', 'crispEdges');
+    g.appendChild(r);
+  }
+
+  function renderPixelUnit(svg, p, x, y){
+    const pal = unitPalette(p);
+    const [skin, cloth, accent, outline, shine] = pal;
+    const s = 4;
+    const bx = x - 30;
+    const by = y - 78;
+    const dir = p.id === 1 ? 1 : -1;
+    const anim = p.anim || 'idle';
+    const g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', `pixel-unit pixel-unit-p${p.id} pixel-unit-${anim}`);
+    g.setAttribute('data-profession', p.professionKey);
+
+    const shadow = document.createElementNS(svgNS, 'ellipse');
+    shadow.setAttribute('cx', x);
+    shadow.setAttribute('cy', y + 7);
+    shadow.setAttribute('rx', 28);
+    shadow.setAttribute('ry', 8);
+    shadow.setAttribute('class', 'pixel-unit-shadow');
+    g.appendChild(shadow);
+
+    addPixelRect(g, bx + 5*s, by + 1*s, 5*s, 1*s, outline);
+    addPixelRect(g, bx + 4*s, by + 2*s, 7*s, 4*s, skin);
+    addPixelRect(g, bx + 4*s, by + 2*s, 7*s, 1*s, outline);
+    addPixelRect(g, bx + 6*s, by + 4*s, 1*s, 1*s, outline);
+    addPixelRect(g, bx + 9*s, by + 4*s, 1*s, 1*s, outline);
+    addPixelRect(g, bx + 5*s, by + 6*s, 5*s, 1*s, outline);
+
+    addPixelRect(g, bx + 4*s, by + 7*s, 8*s, 2*s, outline);
+    addPixelRect(g, bx + 5*s, by + 8*s, 6*s, 5*s, cloth);
+    addPixelRect(g, bx + 6*s, by + 9*s, 4*s, 2*s, accent);
+    addPixelRect(g, bx + 7*s, by + 8*s, 2*s, 1*s, shine, .9);
+
+    addPixelRect(g, bx + 2*s, by + 8*s, 3*s, 2*s, outline);
+    addPixelRect(g, bx + 11*s, by + 8*s, 3*s, 2*s, outline);
+    addPixelRect(g, bx + 2*s, by + 10*s, 2*s, 3*s, cloth);
+    addPixelRect(g, bx + 12*s, by + 10*s, 2*s, 3*s, cloth);
+
+    const weaponX = dir === 1 ? bx + 14*s : bx + 1*s;
+    addPixelRect(g, weaponX, by + 5*s, 1*s, 9*s, '#d8d4c4');
+    addPixelRect(g, weaponX - (dir === 1 ? 0 : 1*s), by + 4*s, 2*s, 2*s, accent);
+
+    addPixelRect(g, bx + 5*s, by + 13*s, 3*s, 4*s, outline);
+    addPixelRect(g, bx + 9*s, by + 13*s, 3*s, 4*s, outline);
+    addPixelRect(g, bx + 5*s, by + 14*s, 2*s, 3*s, cloth);
+    addPixelRect(g, bx + 10*s, by + 14*s, 2*s, 3*s, cloth);
+    addPixelRect(g, bx + 4*s, by + 17*s, 4*s, 1*s, outline);
+    addPixelRect(g, bx + 9*s, by + 17*s, 4*s, 1*s, outline);
+
+    if(anim === 'cast'){
+      const aura = document.createElementNS(svgNS, 'circle');
+      aura.setAttribute('cx', x);
+      aura.setAttribute('cy', y - 38);
+      aura.setAttribute('r', 30);
+      aura.setAttribute('class', 'pixel-cast-aura');
+      g.insertBefore(aura, shadow.nextSibling);
+    }
+
+    const name = document.createElementNS(svgNS, 'text');
+    name.setAttribute('x', x);
+    name.setAttribute('y', y - 86);
+    name.setAttribute('text-anchor', 'middle');
+    name.setAttribute('class', 'unit-nameplate');
+    name.textContent = `P${p.id} ${I18N().entity('profession', p.professionKey, p.profession.name)}`;
+    g.appendChild(name);
+
+    const plate = document.createElementNS(svgNS, 'text');
+    plate.setAttribute('x', x);
+    plate.setAttribute('y', y + 38);
+    plate.setAttribute('text-anchor', 'middle');
+    plate.setAttribute('class', 'unit-hpplate');
+    plate.textContent = `HP ${p.hp} / 护 ${p.block}`;
+    g.appendChild(plate);
+
+    svg.appendChild(g);
   }
 
   function renderHand(){
