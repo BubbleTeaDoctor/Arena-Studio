@@ -5,7 +5,7 @@
   const svgNS = 'http://www.w3.org/2000/svg';
   const NO_ACCESSORY = '__none__';
   const DEFAULT_MATCH_OPTIONS = { blackHoleEnabled: true, drawOpening: 6, drawPerTurn: 2 };
-  const ARENA_BACKDROP = { href: 'assets/maps/arena-ground.png', x: -690, y: 0, width: 3208, height: 1750, opacity: 0.9 };
+  const BOARD_VIEW = { width: 2100, height: 1750 };
   const SPRITE_PROFILES = {
     'knight-blue': {
       frameWidth: 120, frameHeight: 80, scale: 1.22,
@@ -70,6 +70,8 @@
     winner: null,
     dualModeCard: null,
     matchOptions: { ...DEFAULT_MATCH_OPTIONS },
+    boardZoom: 0.7,
+    boardZoomAuto: true,
     battleLog: [],
     debugLog: [],
   };
@@ -104,28 +106,102 @@
     const pts=[]; for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); pts.push(`${x+SIZE*Math.cos(a)},${y+SIZE*Math.sin(a)}`); } return pts.join(' ');
   }
 
+  function addSvg(parent, tag, attrs = {}){
+    const el = document.createElementNS(svgNS, tag);
+    Object.entries(attrs).forEach(([name, value]) => {
+      if(value !== null && value !== undefined) el.setAttribute(name, value);
+    });
+    parent.appendChild(el);
+    return el;
+  }
+
+  function addArenaSpeckles(layer, clipId){
+    const colors = ['#8a6b4e', '#40362c', '#6b513d', '#9a7851'];
+    for(let i=0;i<96;i++){
+      const angle = (i * 137.508) * Math.PI / 180;
+      const radius = Math.sqrt(((i * 37) % 101) / 101);
+      const x = CX + Math.cos(angle) * radius * 820;
+      const y = CY + Math.sin(angle) * radius * 610;
+      addSvg(layer, 'ellipse', {
+        cx: x.toFixed(1),
+        cy: y.toFixed(1),
+        rx: 3 + (i % 9),
+        ry: 1 + (i % 4),
+        fill: colors[i % colors.length],
+        opacity: 0.16 + (i % 5) * 0.025,
+        transform: `rotate(${(i * 29) % 180} ${x.toFixed(1)} ${y.toFixed(1)})`,
+        'clip-path': `url(#${clipId})`
+      });
+    }
+  }
+
+  function addArenaScars(layer, clipId){
+    const blood = [
+      [-330,-140,78,20,-13], [-120,64,58,16,21], [220,-60,82,18,8], [350,210,70,15,-18],
+      [35,-230,52,12,32], [-470,260,64,14,14], [500,-260,54,13,-26]
+    ];
+    blood.forEach(([dx,dy,rx,ry,rot], idx) => {
+      addSvg(layer, 'ellipse', {
+        cx: CX + dx, cy: CY + dy, rx, ry, fill: idx % 2 ? '#5b1515' : '#6d1c1b',
+        opacity: 0.38, transform: `rotate(${rot} ${CX + dx} ${CY + dy})`, 'clip-path': `url(#${clipId})`
+      });
+      addSvg(layer, 'ellipse', {
+        cx: CX + dx + rx * .24, cy: CY + dy - 3, rx: Math.max(12, rx * .28), ry: Math.max(4, ry * .34),
+        fill: '#2c0d0d', opacity: 0.25, transform: `rotate(${rot + 12} ${CX + dx} ${CY + dy})`, 'clip-path': `url(#${clipId})`
+      });
+    });
+
+    const debris = [
+      [-520,-40,42,-8], [-420,190,35,16], [-270,-280,30,28], [-86,285,42,-18], [115,-330,28,8],
+      [290,120,48,18], [465,-105,40,-28], [600,260,36,22], [0,0,54,-12], [-600,-250,32,32]
+    ];
+    debris.forEach(([dx,dy,len,rot], idx) => {
+      const x = CX + dx;
+      const y = CY + dy;
+      addSvg(layer, 'line', {
+        x1: x - len / 2, y1: y, x2: x + len / 2, y2: y,
+        stroke: idx % 3 ? '#c5b9a0' : '#667073', 'stroke-width': idx % 3 ? 3 : 2,
+        opacity: 0.55, transform: `rotate(${rot} ${x} ${y})`, 'clip-path': `url(#${clipId})`
+      });
+      if(idx % 2 === 0){
+        addSvg(layer, 'line', {
+          x1: x + len / 2 - 9, y1: y - 5, x2: x + len / 2 + 8, y2: y + 3,
+          stroke: '#8c2f2b', 'stroke-width': 3, opacity: 0.45,
+          transform: `rotate(${rot} ${x} ${y})`, 'clip-path': `url(#${clipId})`
+        });
+      }
+    });
+  }
+
   function renderArenaBackdrop(svg){
-    const layer = document.createElementNS(svgNS, 'g');
-    layer.setAttribute('class', 'arena-backdrop-layer');
-    const img = document.createElementNS(svgNS, 'image');
-    img.setAttribute('href', ARENA_BACKDROP.href);
-    img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', ARENA_BACKDROP.href);
-    img.setAttribute('x', ARENA_BACKDROP.x);
-    img.setAttribute('y', ARENA_BACKDROP.y);
-    img.setAttribute('width', ARENA_BACKDROP.width);
-    img.setAttribute('height', ARENA_BACKDROP.height);
-    img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-    img.setAttribute('opacity', ARENA_BACKDROP.opacity);
-    img.setAttribute('class', 'arena-backdrop-image');
-    layer.appendChild(img);
-    const shade = document.createElementNS(svgNS, 'rect');
-    shade.setAttribute('x', 0);
-    shade.setAttribute('y', 0);
-    shade.setAttribute('width', 2100);
-    shade.setAttribute('height', 1750);
-    shade.setAttribute('class', 'arena-backdrop-shade');
-    layer.appendChild(shade);
-    svg.appendChild(layer);
+    const defs = addSvg(svg, 'defs');
+    const floorGrad = addSvg(defs, 'radialGradient', { id:'arena-floor-grad', cx:'50%', cy:'48%', r:'58%' });
+    addSvg(floorGrad, 'stop', { offset:'0%', 'stop-color':'#725b43' });
+    addSvg(floorGrad, 'stop', { offset:'66%', 'stop-color':'#584537' });
+    addSvg(floorGrad, 'stop', { offset:'100%', 'stop-color':'#2a241f' });
+    const clip = addSvg(defs, 'clipPath', { id:'arena-floor-clip' });
+    addSvg(clip, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665 });
+
+    const layer = addSvg(svg, 'g', { class:'arena-backdrop-layer' });
+    addSvg(layer, 'rect', { x:0, y:0, width:BOARD_VIEW.width, height:BOARD_VIEW.height, class:'arena-night' });
+
+    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:1020, ry:765, class:'arena-stands' });
+    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:920, ry:690, class:'arena-wall-outer' });
+    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665, class:'arena-floor' });
+    addArenaSpeckles(layer, 'arena-floor-clip');
+    addArenaScars(layer, 'arena-floor-clip');
+    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665, class:'arena-floor-line' });
+    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:540, ry:400, class:'arena-inner-wear' });
+
+    for(let i=0;i<34;i++){
+      const angle = (Math.PI * 2 * i) / 34;
+      const x = CX + Math.cos(angle) * 970;
+      const y = CY + Math.sin(angle) * 720;
+      addSvg(layer, 'rect', {
+        x: x - 16, y: y - 9, width: 32, height: 18, rx: 2,
+        class: 'arena-crowd-dot', transform: `rotate(${angle * 180 / Math.PI + 90} ${x} ${y})`
+      });
+    }
   }
 
   function rollDetail(notation){
@@ -986,6 +1062,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     state.players.forEach(p=>ensureHandLimit(p));
     log(isBlackHoleEnabled() ? '对局开始。黑洞每回合将所有单位向中心牵引 1 格。' : '对局开始。黑洞已关闭。');
     startTurn();
+    setTimeout(fitBoardZoom, 0);
   }
 
   function startTurn(){
@@ -1574,8 +1651,8 @@ async function applyRewardList(player, rewards, labelPrefix){
       const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points', hexPoints(x,y));
       const inDanger = ((isSpikeDangerTile(t) && t.type !== 'spike') || (isTokenDangerTile(t) && !getMapToken(t)));
-      poly.setAttribute('fill', centerActive?'#6c3b75': t.type==='spike'?'#7d5353': t.type==='start'?'#9db36f': inDanger ? '#8c4c4c' : '#e0d293');
-      poly.setAttribute('opacity', centerActive ? '0.44' : t.type==='spike' ? '0.4' : inDanger ? '0.32' : t.type==='start' ? '0.24' : '0.12'); g.appendChild(poly);
+      poly.setAttribute('fill', centerActive?'#4d315c': t.type==='spike'?'#7d5353': t.type==='start'?'#9db36f': inDanger ? '#8c4c4c' : '#d8c384');
+      poly.setAttribute('opacity', centerActive ? '0.34' : t.type==='spike' ? '0.28' : inDanger ? '0.24' : t.type==='start' ? '0.18' : '0.07'); g.appendChild(poly);
       if(inDanger){
         const zone=document.createElementNS(svgNS,'polygon');
         zone.setAttribute('points', hexPoints(x,y));
@@ -1974,6 +2051,53 @@ async function applyRewardList(player, rewards, labelPrefix){
     window.addEventListener('scroll', hideDeckTooltip, true);
   }
 
+  function clampBoardZoom(value){
+    const min = window.innerWidth < 720 ? 0.32 : 0.42;
+    const max = window.innerWidth < 720 ? 0.82 : 1.15;
+    return Math.max(min, Math.min(max, Number(value || state.boardZoom || 0.7)));
+  }
+
+  function setBoardZoom(value, auto = false){
+    state.boardZoom = clampBoardZoom(value);
+    state.boardZoomAuto = !!auto;
+    const board = $('board');
+    if(board){
+      board.style.width = `${Math.round(BOARD_VIEW.width * state.boardZoom)}px`;
+      board.style.height = `${Math.round(BOARD_VIEW.height * state.boardZoom)}px`;
+    }
+    const label = $('board-zoom-label');
+    if(label) label.textContent = `${Math.round(state.boardZoom * 100)}%`;
+  }
+
+  function fitBoardZoom(){
+    const wrap = $('board-wrap');
+    if(!wrap || wrap.offsetParent === null) {
+      setBoardZoom(state.boardZoom, state.boardZoomAuto);
+      return;
+    }
+    const hand = $('hand-panel');
+    const wrapRect = wrap.getBoundingClientRect();
+    const handRect = hand ? hand.getBoundingClientRect() : { height: 0 };
+    const availableW = Math.max(360, wrap.clientWidth - 18);
+    const availableH = Math.max(300, window.innerHeight - wrapRect.top - handRect.height - 26);
+    const fit = Math.min(availableW / BOARD_VIEW.width, availableH / BOARD_VIEW.height);
+    setBoardZoom(fit, true);
+  }
+
+  function bindBoardZoomControls(){
+    setBoardZoom(state.boardZoom, true);
+    const out = $('board-zoom-out');
+    const inn = $('board-zoom-in');
+    const fit = $('board-zoom-fit');
+    if(out) out.onclick = () => setBoardZoom(state.boardZoom - 0.08, false);
+    if(inn) inn.onclick = () => setBoardZoom(state.boardZoom + 0.08, false);
+    if(fit) fit.onclick = fitBoardZoom;
+    window.addEventListener('resize', () => {
+      if(state.boardZoomAuto) fitBoardZoom();
+      else setBoardZoom(state.boardZoom, false);
+    });
+  }
+
   function fillSetupSelect(id, obj, kind, includeNone = false){
     const sel=$(id);
     sel.innerHTML='';
@@ -2030,6 +2154,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     if ($('btn-export-battle-log')) $('btn-export-battle-log').onclick = exportBattleLog;
     if ($('btn-export-debug-log')) $('btn-export-debug-log').onclick = exportDebugBundle;
     $('ruleset-select').onchange = () => populateSetup($('ruleset-select').value);
+    bindBoardZoomControls();
     bindDeckTooltips();
   }
   (async()=>{
