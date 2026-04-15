@@ -139,15 +139,17 @@ body.game-theme{
 }
 .game-theme #board{
   background:
-    radial-gradient(circle at center,rgba(95,74,122,.24),transparent 18%),
-    radial-gradient(circle at 50% 48%,rgba(225,196,91,.08),transparent 42%),
-    linear-gradient(180deg,#1a2119,#101510);
+    radial-gradient(circle at 50% 45%,rgba(225,196,91,.08),transparent 46%),
+    linear-gradient(180deg,#111810,#080a08);
 }
 .game-theme #board.black-hole-off{
   background:
     radial-gradient(circle at 50% 48%,rgba(110,214,196,.08),transparent 42%),
     linear-gradient(180deg,#1a2119,#101510);
 }
+.arena-backdrop-layer{pointer-events:none}
+.arena-backdrop-image{image-rendering:pixelated}
+.arena-backdrop-shade{fill:rgba(5,7,5,.16)}
 .game-theme .tile polygon{stroke:rgba(225,196,91,.2);stroke-width:2}
 .game-theme .tile.valid-move polygon{stroke:var(--move);filter:drop-shadow(0 0 6px rgba(127,217,138,.45))}
 .game-theme .tile.valid-target polygon{stroke:var(--target);filter:drop-shadow(0 0 6px rgba(231,180,90,.45))}
@@ -163,7 +165,7 @@ body.game-theme{
 .game-theme .card-name{color:#f7efcc;text-shadow:0 1px 0 rgba(0,0,0,.45)}
 .game-theme .card-meta{color:var(--warn)}
 .game-theme .card.selected{outline:2px solid var(--accent);box-shadow:0 0 0 3px rgba(110,214,196,.14),0 7px 0 rgba(0,0,0,.26)}
-.game-theme #game-screen{padding-bottom:250px}
+.game-theme #game-screen{padding-bottom:310px}
 .game-theme #hand-panel{
   position:fixed;
   left:18px;
@@ -185,8 +187,8 @@ body.game-theme{
   align-items:flex-end;
   justify-content:center;
   gap:0;
-  min-height:210px;
-  padding:34px 28px 12px;
+  min-height:250px;
+  padding:72px 28px 14px;
   overflow-x:auto;
   overflow-y:visible;
   scrollbar-width:thin;
@@ -275,11 +277,11 @@ body.game-theme{
   .game-theme header h1{font-size:24px}
   .game-theme .panel{padding:12px}
   .game-theme #board{min-width:1180px;min-height:980px}
-  .game-theme #game-screen{padding-bottom:210px}
+  .game-theme #game-screen{padding-bottom:250px}
   .game-theme #hand-panel{left:6px;right:6px;bottom:6px;padding:8px}
   .game-theme #hand-panel h2{font-size:16px}
   .game-theme #hand-panel .panel-head{align-items:flex-start}
-  .game-theme .hand{justify-content:flex-start;min-height:168px;padding:28px 8px 8px}
+  .game-theme .hand{justify-content:flex-start;min-height:205px;padding:58px 8px 10px}
   .game-theme .hand .card{flex-basis:148px;width:148px;min-height:164px;margin-left:-24px;padding:10px}
   .game-theme .hand .card:first-child{margin-left:0}
   .game-theme .hand .card.selected{transform:translateY(-28px) rotate(0deg) scale(1.04)}

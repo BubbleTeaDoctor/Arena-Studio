@@ -5,6 +5,7 @@
   const svgNS = 'http://www.w3.org/2000/svg';
   const NO_ACCESSORY = '__none__';
   const DEFAULT_MATCH_OPTIONS = { blackHoleEnabled: true, drawOpening: 6, drawPerTurn: 2 };
+  const ARENA_BACKDROP = { href: 'assets/maps/arena-ground.png', x: -690, y: 0, width: 3208, height: 1750, opacity: 0.9 };
   const SPRITE_PROFILES = {
     'knight-blue': {
       frameWidth: 120, frameHeight: 80, scale: 1.22,
@@ -101,6 +102,30 @@
   }
   function hexPoints(x,y){
     const pts=[]; for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); pts.push(`${x+SIZE*Math.cos(a)},${y+SIZE*Math.sin(a)}`); } return pts.join(' ');
+  }
+
+  function renderArenaBackdrop(svg){
+    const layer = document.createElementNS(svgNS, 'g');
+    layer.setAttribute('class', 'arena-backdrop-layer');
+    const img = document.createElementNS(svgNS, 'image');
+    img.setAttribute('href', ARENA_BACKDROP.href);
+    img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', ARENA_BACKDROP.href);
+    img.setAttribute('x', ARENA_BACKDROP.x);
+    img.setAttribute('y', ARENA_BACKDROP.y);
+    img.setAttribute('width', ARENA_BACKDROP.width);
+    img.setAttribute('height', ARENA_BACKDROP.height);
+    img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+    img.setAttribute('opacity', ARENA_BACKDROP.opacity);
+    img.setAttribute('class', 'arena-backdrop-image');
+    layer.appendChild(img);
+    const shade = document.createElementNS(svgNS, 'rect');
+    shade.setAttribute('x', 0);
+    shade.setAttribute('y', 0);
+    shade.setAttribute('width', 2100);
+    shade.setAttribute('height', 1750);
+    shade.setAttribute('class', 'arena-backdrop-shade');
+    layer.appendChild(shade);
+    svg.appendChild(layer);
   }
 
   function rollDetail(notation){
@@ -1536,6 +1561,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const svg = $('board'); svg.innerHTML = '';
     const blackHoleOn = isBlackHoleEnabled();
     svg.classList.toggle('black-hole-off', !blackHoleOn);
+    renderArenaBackdrop(svg);
     const hl = tileHighlights(); const active=current();
     state.board.forEach(t=>{
       const {x,y}=hexToPixel(t); const g=document.createElementNS(svgNS,'g'); g.classList.add('tile');
@@ -1548,8 +1574,8 @@ async function applyRewardList(player, rewards, labelPrefix){
       const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points', hexPoints(x,y));
       const inDanger = ((isSpikeDangerTile(t) && t.type !== 'spike') || (isTokenDangerTile(t) && !getMapToken(t)));
-      poly.setAttribute('fill', centerActive?'#6c3b75': t.type==='spike'?'#7d5353': t.type==='start'?'#465b3f': inDanger ? '#5b4141' : '#36404d');
-      poly.setAttribute('opacity','0.96'); g.appendChild(poly);
+      poly.setAttribute('fill', centerActive?'#6c3b75': t.type==='spike'?'#7d5353': t.type==='start'?'#9db36f': inDanger ? '#8c4c4c' : '#e0d293');
+      poly.setAttribute('opacity', centerActive ? '0.44' : t.type==='spike' ? '0.4' : inDanger ? '0.32' : t.type==='start' ? '0.24' : '0.12'); g.appendChild(poly);
       if(inDanger){
         const zone=document.createElementNS(svgNS,'polygon');
         zone.setAttribute('points', hexPoints(x,y));
