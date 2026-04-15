@@ -1181,8 +1181,10 @@ async function applyRewardList(player, rewards, labelPrefix){
     const cardDef = getCardDef(handItem.cardKey);
     if(!cardDef) return;
     if(!cardCanBePlayed(p, handItem, cardDef)) { setHint('当前行动桶已用尽，或法师移动限制生效。'); return; }
+    state.selectedCardIndex = index;
     if(cardDef.template==='dual_mode'){
       state.dualModeCard = { index, handItem, cardDef };
+      renderHand();
       renderChoicePanel(cardDef.config.modes || []);
       return;
     }
@@ -1642,74 +1644,6 @@ async function applyRewardList(player, rewards, labelPrefix){
     g.appendChild(plate);
   }
 
-  function appendWeaponLine(g, x1, y1, x2, y2, width, color, extraClass = ''){
-    const line = document.createElementNS(svgNS, 'line');
-    setSvgAttrs(line, {
-      x1, y1, x2, y2,
-      class: `unit-weapon ${extraClass}`.trim(),
-      stroke: color,
-      'stroke-width': width,
-      'stroke-linecap': 'square'
-    });
-    g.appendChild(line);
-    return line;
-  }
-
-  function renderWeaponOverlay(g, p, anim){
-    const weapon = weaponPresentation(p);
-    const isAction = ['attack', 'attackHeavy', 'attackCombo', 'cast'].includes(anim);
-    const push = isAction ? 8 : 0;
-    const color = weapon.color;
-    const accent = weapon.accent;
-    const cls = `weapon-${weapon.kind}`;
-
-    if(weapon.kind === 'greatsword'){
-      appendWeaponLine(g, 18 + push, -42, 45 + push, -82, 7, color, cls);
-      appendWeaponLine(g, 12 + push, -39, 26 + push, -49, 4, accent, cls);
-    } else if(weapon.kind === 'hammer'){
-      appendWeaponLine(g, 18 + push, -42, 40 + push, -68, 6, color, cls);
-      const head = document.createElementNS(svgNS, 'rect');
-      setSvgAttrs(head, { x: 34 + push, y: -78, width: 24, height: 12, rx: 1, fill: accent, class: `unit-weapon-head ${cls}` });
-      g.appendChild(head);
-    } else if(weapon.kind === 'bow'){
-      const bow = document.createElementNS(svgNS, 'path');
-      setSvgAttrs(bow, { d: `M${24 + push},-72 Q${48 + push},-49 ${24 + push},-26`, fill: 'none', stroke: color, 'stroke-width': 4, class: `unit-weapon ${cls}` });
-      g.appendChild(bow);
-      appendWeaponLine(g, 25 + push, -70, 25 + push, -28, 2, accent, cls);
-      if(isAction){
-        appendWeaponLine(g, 20 + push, -49, 62 + push, -49, 3, '#f5e6a8', `${cls} weapon-projectile`);
-        const arrow = document.createElementNS(svgNS, 'polygon');
-        setSvgAttrs(arrow, { points: `${64 + push},-49 ${56 + push},-54 ${56 + push},-44`, fill: '#f5e6a8', class: `weapon-projectile ${cls}` });
-        g.appendChild(arrow);
-      }
-    } else if(weapon.kind === 'dagger'){
-      appendWeaponLine(g, 15 + push, -43, 34 + push, -58, 4, color, cls);
-      appendWeaponLine(g, 10 + push, -40, 22 + push, -48, 3, accent, cls);
-    } else if(weapon.kind === 'dual_blades'){
-      appendWeaponLine(g, 14 + push, -43, 37 + push, -62, 4, color, cls);
-      appendWeaponLine(g, 3 + push, -41, 23 + push, -57, 4, color, cls);
-      if(isAction) appendWeaponLine(g, 24 + push, -62, 54 + push, -76, 2, accent, `${cls} weapon-slash`);
-    } else if(weapon.kind === 'wand'){
-      appendWeaponLine(g, 18 + push, -40, 42 + push, -72, 4, color, cls);
-      const orb = document.createElementNS(svgNS, 'circle');
-      setSvgAttrs(orb, { cx: 45 + push, cy: -75, r: isAction ? 8 : 5, fill: accent, class: `unit-weapon-orb ${cls}` });
-      g.appendChild(orb);
-    } else if(weapon.kind === 'totem'){
-      appendWeaponLine(g, 20 + push, -34, 34 + push, -72, 7, color, cls);
-      const head = document.createElementNS(svgNS, 'rect');
-      setSvgAttrs(head, { x: 26 + push, y: -79, width: 18, height: 16, rx: 1, fill: accent, class: `unit-weapon-head ${cls}` });
-      g.appendChild(head);
-    } else {
-      appendWeaponLine(g, 18 + push, -42, 40 + push, -76, 5, color, cls);
-    }
-
-    if(isAction && (weapon.kind === 'wand' || weapon.kind === 'totem')){
-      const aura = document.createElementNS(svgNS, 'circle');
-      setSvgAttrs(aura, { cx: 45 + push, cy: -74, r: 20, class: 'weapon-cast-aura' });
-      g.insertBefore(aura, g.firstChild);
-    }
-  }
-
   function renderSpriteUnit(svg, p, x, y){
     const profile = spriteProfileFor(p);
     const animName = p.anim || 'idle';
@@ -1757,7 +1691,6 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(frameCount > 1) strip.style.animation = `sprite-strip ${duration}ms steps(${steps}, end) ${loop} forwards`;
     fo.appendChild(strip);
     body.appendChild(fo);
-    renderWeaponOverlay(body, p, animName);
     g.appendChild(body);
 
     if(animName === 'cast'){
@@ -1837,11 +1770,18 @@ async function applyRewardList(player, rewards, labelPrefix){
   function renderHand(){
     const hand = $('hand'); hand.innerHTML='';
     const p=current();
+    const count = p.hand.length;
+    const mid = (count - 1) / 2;
     p.hand.forEach((item, idx)=>{
       const def = getCardDef(item.cardKey);
       if(!def) return;
       const b=document.createElement('button');
       b.className='card'+(state.selectedCardIndex===idx?' selected':'');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', state.selectedCardIndex===idx ? 'true' : 'false');
+      b.style.setProperty('--fan-rotate', `${(idx - mid) * 3.2}deg`);
+      b.style.setProperty('--fan-y', `${Math.abs(idx - mid) * 5}px`);
+      b.style.zIndex = String(20 + idx);
       b.innerHTML=`<div class="card-name">${I18N().entity('card', item.cardKey, def.name)}</div>
         <div class="card-meta">${I18N().t('source','来源')}：${I18N().entity('origin', item.origin, item.origin)} · ${I18N().t('template','模板')}：${I18N().entity('template', def.template, def.template)}</div>
         <div class="card-text">${def.text || ''}</div>`;

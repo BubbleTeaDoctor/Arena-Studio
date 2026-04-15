@@ -163,6 +163,74 @@ body.game-theme{
 .game-theme .card-name{color:#f7efcc;text-shadow:0 1px 0 rgba(0,0,0,.45)}
 .game-theme .card-meta{color:var(--warn)}
 .game-theme .card.selected{outline:2px solid var(--accent);box-shadow:0 0 0 3px rgba(110,214,196,.14),0 7px 0 rgba(0,0,0,.26)}
+.game-theme #game-screen{padding-bottom:250px}
+.game-theme #hand-panel{
+  position:fixed;
+  left:18px;
+  right:18px;
+  bottom:12px;
+  z-index:30;
+  padding:10px 14px 12px;
+  background:linear-gradient(180deg,rgba(34,40,31,.92),rgba(11,13,10,.97));
+  border-color:rgba(225,196,91,.32);
+  box-shadow:0 -10px 28px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.game-theme #hand-panel .panel-head{margin-bottom:0}
+.game-theme #hand-panel h2{font-size:18px;margin:0;color:#f7efcc}
+.game-theme #hand-panel #selection-hint{padding:0 10px 4px;color:#d4dccb}
+.game-theme #hand-panel .choice-panel{margin-top:6px}
+.game-theme .hand{
+  display:flex;
+  grid-template-columns:none;
+  align-items:flex-end;
+  justify-content:center;
+  gap:0;
+  min-height:210px;
+  padding:34px 28px 12px;
+  overflow-x:auto;
+  overflow-y:visible;
+  scrollbar-width:thin;
+}
+.game-theme .hand .card{
+  position:relative;
+  flex:0 0 180px;
+  width:180px;
+  min-height:210px;
+  margin-left:-36px;
+  padding:12px;
+  transform:translateY(var(--fan-y,0)) rotate(var(--fan-rotate,0));
+  transform-origin:center 118%;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease;
+  touch-action:manipulation;
+}
+.game-theme .hand .card:first-child{margin-left:0}
+.game-theme .hand .card.selected{
+  transform:translateY(-38px) rotate(0deg) scale(1.05);
+  z-index:120 !important;
+  border-color:rgba(110,214,196,.86);
+  filter:brightness(1.08);
+}
+.game-theme .hand .card.selected::after{
+  content:"";
+  position:absolute;
+  inset:-7px;
+  border:1px solid rgba(110,214,196,.62);
+  border-radius:8px;
+  pointer-events:none;
+  box-shadow:0 0 18px rgba(110,214,196,.24);
+}
+.game-theme .hand .card-name{font-size:16px;line-height:1.18}
+.game-theme .hand .card-meta{font-size:11px}
+.game-theme .hand .card-text{font-size:13px}
+@media (hover:hover){
+  .game-theme .hand .card:hover,
+  .game-theme .hand .card:focus-visible{
+    transform:translateY(-34px) rotate(0deg) scale(1.04);
+    z-index:110 !important;
+    border-color:rgba(225,196,91,.58);
+    filter:brightness(1.06);
+  }
+}
 .game-theme .player-box{
   border-radius:8px;
   background:linear-gradient(180deg,#252d22,#171d16);
@@ -181,12 +249,6 @@ body.game-theme{
 .sprite-sheet-strip{background-repeat:no-repeat;background-position:0 0;image-rendering:pixelated}
 .sprite-unit-death{animation:sprite-unit-fade 900ms steps(5,end) forwards}
 .sprite-unit-hurt{animation:sprite-hit-flash 360ms steps(2,end)}
-.unit-weapon{filter:drop-shadow(0 1px 0 #080a08) drop-shadow(1px 0 0 #080a08)}
-.unit-weapon-head{stroke:#080a08;stroke-width:4px}
-.unit-weapon-orb{stroke:#080a08;stroke-width:4px}
-.weapon-projectile{filter:drop-shadow(0 0 4px rgba(245,230,168,.55))}
-.weapon-slash{opacity:.9;filter:drop-shadow(0 0 5px rgba(255,207,106,.6))}
-.weapon-cast-aura{fill:rgba(110,214,196,.08);stroke:rgba(110,214,196,.55);stroke-width:2;stroke-dasharray:4 4}
 @keyframes sprite-strip{to{background-position-x:calc(-1 * var(--sprite-shift))}}
 @keyframes sprite-hit-flash{0%,100%{opacity:1}45%{opacity:.72}72%{opacity:1}}
 @keyframes sprite-unit-fade{0%{opacity:1}72%{opacity:.85}100%{opacity:0}}
@@ -213,6 +275,15 @@ body.game-theme{
   .game-theme header h1{font-size:24px}
   .game-theme .panel{padding:12px}
   .game-theme #board{min-width:1180px;min-height:980px}
-  .game-theme .hand{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
-  .game-theme .card{min-height:158px}
+  .game-theme #game-screen{padding-bottom:210px}
+  .game-theme #hand-panel{left:6px;right:6px;bottom:6px;padding:8px}
+  .game-theme #hand-panel h2{font-size:16px}
+  .game-theme #hand-panel .panel-head{align-items:flex-start}
+  .game-theme .hand{justify-content:flex-start;min-height:168px;padding:28px 8px 8px}
+  .game-theme .hand .card{flex-basis:148px;width:148px;min-height:164px;margin-left:-24px;padding:10px}
+  .game-theme .hand .card:first-child{margin-left:0}
+  .game-theme .hand .card.selected{transform:translateY(-28px) rotate(0deg) scale(1.04)}
+  .game-theme .hand .card-name{font-size:14px}
+  .game-theme .hand .card-meta{font-size:10px}
+  .game-theme .hand .card-text{font-size:12px}
 }
