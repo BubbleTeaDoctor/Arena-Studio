@@ -6,6 +6,13 @@
   const NO_ACCESSORY = '__none__';
   const DEFAULT_MATCH_OPTIONS = { blackHoleEnabled: true, drawOpening: 6, drawPerTurn: 2 };
   const BOARD_VIEW = { width: 2100, height: 1750 };
+  const MAP_ASSETS = {
+    stoneGround: 'assets/map/stone-ground.png',
+    grassGround: 'assets/map/grass-ground.png',
+    tombTiles: 'assets/map/lost-tomb-tiles.png',
+    spikeFloor: 'assets/map/trap-spikes-floor.png',
+    voidFx: 'assets/map/void-fx.png'
+  };
   const SPRITE_PROFILES = {
     'knight-blue': {
       frameWidth: 120, frameHeight: 80, scale: 1.22,
@@ -205,6 +212,25 @@
     return el;
   }
 
+  function addImagePattern(defs, id, href, size, opacity = 1){
+    const pattern = addSvg(defs, 'pattern', {
+      id,
+      patternUnits: 'userSpaceOnUse',
+      width: size,
+      height: size
+    });
+    addSvg(pattern, 'image', {
+      href,
+      x: 0,
+      y: 0,
+      width: size,
+      height: size,
+      opacity,
+      preserveAspectRatio: 'xMidYMid slice'
+    });
+    return pattern;
+  }
+
   function addArenaSpeckles(layer, clipId){
     const colors = ['#8a6b4e', '#40362c', '#6b513d', '#9a7851'];
     for(let i=0;i<96;i++){
@@ -269,6 +295,10 @@
     addSvg(floorGrad, 'stop', { offset:'0%', 'stop-color':'#5f5743' });
     addSvg(floorGrad, 'stop', { offset:'68%', 'stop-color':'#413b31' });
     addSvg(floorGrad, 'stop', { offset:'100%', 'stop-color':'#171a15' });
+    addImagePattern(defs, 'arena-stone-pattern', MAP_ASSETS.stoneGround, 192, 0.72);
+    addImagePattern(defs, 'tile-stone-pattern', MAP_ASSETS.stoneGround, 120, 0.92);
+    addImagePattern(defs, 'tile-grass-pattern', MAP_ASSETS.grassGround, 112, 0.9);
+    addImagePattern(defs, 'tile-tomb-pattern', MAP_ASSETS.tombTiles, 144, 0.86);
     const clip = addSvg(defs, 'clipPath', { id:'arena-floor-clip' });
     addSvg(clip, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665 });
 
@@ -1713,15 +1743,34 @@ async function applyRewardList(player, rewards, labelPrefix){
     return highlightSet();
   }
 
+  function tileMaterialFill(tile, centerActive, isSpikeTile, inDanger){
+    if(centerActive) return '#4d315c';
+    if(isSpikeTile || inDanger) return 'url(#tile-tomb-pattern)';
+    if(tile.type === 'start') return 'url(#tile-grass-pattern)';
+    return 'url(#tile-stone-pattern)';
+  }
+
+  function tileMaterialOpacity(tile, centerActive, isSpikeTile, inDanger){
+    if(centerActive) return '0.48';
+    if(isSpikeTile) return '0.78';
+    if(inDanger) return '0.68';
+    if(tile.type === 'start') return '0.7';
+    return '0.62';
+  }
+
   function renderSpikeTowerComponent(layer, tile){
     const {x,y} = hexToPixel(tile);
     const g = addSvg(layer, 'g', { class:'map-component spike-tower-component', transform:`translate(${x} ${y})` });
-    addSvg(g, 'ellipse', { cx:0, cy:16, rx:30, ry:11, class:'map-component-shadow' });
-    addSvg(g, 'polygon', { points:'-31,12 -19,-24 -8,13', class:'spike-blade spike-blade-back' });
-    addSvg(g, 'polygon', { points:'-11,15 0,-34 12,15', class:'spike-blade spike-blade-front' });
-    addSvg(g, 'polygon', { points:'8,13 22,-22 31,12', class:'spike-blade spike-blade-back' });
-    addSvg(g, 'circle', { cx:0, cy:7, r:17, class:'spike-core' });
-    addSvg(g, 'circle', { cx:0, cy:7, r:5, class:'spike-glint' });
+    addSvg(g, 'ellipse', { cx:0, cy:13, rx:38, ry:13, class:'map-component-shadow' });
+    addSvg(g, 'image', {
+      href: MAP_ASSETS.spikeFloor,
+      x: -46,
+      y: -17,
+      width: 92,
+      height: 26,
+      class: 'spike-floor-sprite',
+      preserveAspectRatio: 'xMidYMid meet'
+    });
     return g;
   }
 
@@ -1730,10 +1779,17 @@ async function applyRewardList(player, rewards, labelPrefix){
     const g = addSvg(layer, 'g', { class:'map-component black-hole-component', transform:`translate(${x} ${y})` });
     addSvg(g, 'ellipse', { cx:0, cy:19, rx:40, ry:13, class:'map-component-shadow' });
     addSvg(g, 'circle', { cx:0, cy:0, r:35, class:'black-hole-rim' });
+    addSvg(g, 'image', {
+      href: MAP_ASSETS.voidFx,
+      x: -43,
+      y: -49,
+      width: 86,
+      height: 86,
+      class: 'black-hole-fx',
+      preserveAspectRatio: 'xMidYMid meet'
+    });
     addSvg(g, 'ellipse', { cx:0, cy:0, rx:45, ry:13, class:'black-hole-orbit', transform:'rotate(-18)' });
-    addSvg(g, 'ellipse', { cx:0, cy:0, rx:33, ry:9, class:'black-hole-orbit black-hole-orbit-inner', transform:'rotate(24)' });
     addSvg(g, 'circle', { cx:0, cy:0, r:20, class:'black-hole-core' });
-    addSvg(g, 'circle', { cx:-7, cy:-7, r:5, class:'black-hole-glint' });
     return g;
   }
 
@@ -1762,8 +1818,8 @@ async function applyRewardList(player, rewards, labelPrefix){
       const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points', hexPoints(x,y));
       const inDanger = ((isSpikeDangerTile(t) && !isSpikeTile) || (isTokenDangerTile(t) && !getMapToken(t)));
-      poly.setAttribute('fill', centerActive?'#4d315c': isSpikeTile?'#7d5353': t.type==='start'?'#9db36f': inDanger ? '#8c4c4c' : '#d8c384');
-      poly.setAttribute('opacity', centerActive ? '0.38' : isSpikeTile ? '0.3' : inDanger ? '0.28' : t.type==='start' ? '0.24' : '0.18'); g.appendChild(poly);
+      poly.setAttribute('fill', tileMaterialFill(t, centerActive, isSpikeTile, inDanger));
+      poly.setAttribute('opacity', tileMaterialOpacity(t, centerActive, isSpikeTile, inDanger)); g.appendChild(poly);
       if(inDanger){
         const zone=document.createElementNS(svgNS,'polygon');
         zone.setAttribute('points', hexPoints(x,y));
@@ -1989,8 +2045,8 @@ async function applyRewardList(player, rewards, labelPrefix){
       b.className='card'+(state.selectedCardIndex===idx?' selected':'');
       b.type = 'button';
       b.setAttribute('aria-pressed', state.selectedCardIndex===idx ? 'true' : 'false');
-      b.style.setProperty('--fan-rotate', `${(idx - mid) * 3.2}deg`);
-      b.style.setProperty('--fan-y', `${Math.abs(idx - mid) * 5}px`);
+      b.style.setProperty('--fan-rotate', `${(idx - mid) * 2.4}deg`);
+      b.style.setProperty('--fan-y', `${Math.abs(idx - mid) * 3}px`);
       b.style.zIndex = String(20 + idx);
       b.innerHTML=`<div class="card-name">${I18N().entity('card', item.cardKey, def.name)}</div>
         <div class="card-meta">${I18N().t('source','来源')}：${I18N().entity('origin', item.origin, item.origin)} · ${I18N().t('template','模板')}：${I18N().entity('template', def.template, def.template)}</div>
