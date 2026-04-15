@@ -47,6 +47,53 @@
         "hurt": { "file": "assets/sprites/samurai/hurt.png", "frames": 4, "duration": 360 },
         "death": { "file": "assets/sprites/samurai/hurt.png", "frames": 4, "duration": 800 }
       }
+    },
+    "severed-fang": {
+      "source": "E:/minigame/素材/FallenOrder-SeveredFang",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "scale": 1.08
+    },
+    "evil-wizard": {
+      "source": "E:/minigame/素材/Evil Wizard 3",
+      "frameWidth": 140,
+      "frameHeight": 140,
+      "scale": 1.0
+    },
+    "blind-huntress": {
+      "source": "E:/minigame/素材/SHADOW Series - The Blind Huntress",
+      "frameWidth": 120,
+      "frameHeight": 128,
+      "scale": 1.06
+    },
+    "duskborne-elf": {
+      "source": "E:/minigame/素材/DuskBorne-Elf",
+      "frameWidth": 160,
+      "frameHeight": 144,
+      "scale": 0.98
+    },
+    "duskborne-demonkin": {
+      "source": "E:/minigame/素材/DuskBorne-DemonKin",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "scale": 1.08
+    },
+    "battle-maid": {
+      "source": "E:/minigame/素材/Battle_maid",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "scale": 1.05
     }
+  },
+  "professionMapping": {
+    "warrior": "severed-fang",
+    "mage": "evil-wizard",
+    "rogue": "blind-huntress",
+    "priest": "battle-maid",
+    "shaman": "duskborne-elf",
+    "necro": "duskborne-demonkin",
+    "warlock": "duskborne-demonkin",
+    "swordsman": "samurai",
+    "hunter": "duskborne-elf"
   }
 }

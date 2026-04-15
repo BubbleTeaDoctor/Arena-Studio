@@ -45,9 +45,98 @@
         hurt: { file: 'assets/sprites/samurai/hurt.png', frames: 4, duration: 360 },
         death: { file: 'assets/sprites/samurai/hurt.png', frames: 4, duration: 800 }
       }
+    },
+    'severed-fang': {
+      frameWidth: 128, frameHeight: 128, scale: 1.08,
+      animations: {
+        idle: { file: 'assets/sprites/severed-fang/idle.png', frames: 6, duration: 950, loop: true },
+        run: { file: 'assets/sprites/severed-fang/run.png', frames: 8, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/severed-fang/attack.png', frames: 24, duration: 680 },
+        attackHeavy: { file: 'assets/sprites/severed-fang/attack.png', frames: 24, duration: 780 },
+        attackCombo: { file: 'assets/sprites/severed-fang/attack.png', frames: 24, duration: 820 },
+        cast: { file: 'assets/sprites/severed-fang/cast.png', frames: 14, duration: 720 },
+        hurt: { file: 'assets/sprites/severed-fang/hurt.png', frames: 4, duration: 360 },
+        death: { file: 'assets/sprites/severed-fang/death.png', frames: 7, duration: 860 }
+      }
+    },
+    'evil-wizard': {
+      frameWidth: 140, frameHeight: 140, scale: 1.0,
+      animations: {
+        idle: { file: 'assets/sprites/evil-wizard/idle.png', frames: 10, duration: 1050, loop: true },
+        run: { file: 'assets/sprites/evil-wizard/run.png', frames: 8, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/evil-wizard/attack.png', frames: 13, duration: 720 },
+        attackHeavy: { file: 'assets/sprites/evil-wizard/attack.png', frames: 13, duration: 780 },
+        attackCombo: { file: 'assets/sprites/evil-wizard/attack.png', frames: 13, duration: 820 },
+        cast: { file: 'assets/sprites/evil-wizard/cast.png', frames: 13, duration: 760 },
+        hurt: { file: 'assets/sprites/evil-wizard/hurt.png', frames: 3, duration: 360 },
+        death: { file: 'assets/sprites/evil-wizard/death.png', frames: 18, duration: 980 }
+      }
+    },
+    'blind-huntress': {
+      frameWidth: 120, frameHeight: 128, scale: 1.06,
+      animations: {
+        idle: { file: 'assets/sprites/blind-huntress/idle.png', frames: 24, duration: 1150, loop: true },
+        run: { file: 'assets/sprites/blind-huntress/run.png', frames: 16, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/blind-huntress/attack.png', frames: 6, duration: 520 },
+        attackHeavy: { file: 'assets/sprites/blind-huntress/cast.png', frames: 10, duration: 660 },
+        attackCombo: { file: 'assets/sprites/blind-huntress/cast.png', frames: 10, duration: 700 },
+        cast: { file: 'assets/sprites/blind-huntress/cast.png', frames: 10, duration: 660 },
+        hurt: { file: 'assets/sprites/blind-huntress/hurt.png', frames: 2, duration: 320 },
+        death: { file: 'assets/sprites/blind-huntress/death.png', frames: 20, duration: 900 }
+      }
+    },
+    'duskborne-elf': {
+      frameWidth: 160, frameHeight: 144, scale: 0.98,
+      animations: {
+        idle: { file: 'assets/sprites/duskborne-elf/idle.png', frames: 6, duration: 1050, loop: true },
+        run: { file: 'assets/sprites/duskborne-elf/run.png', frames: 8, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/duskborne-elf/attack.png', frames: 7, duration: 560 },
+        attackHeavy: { file: 'assets/sprites/duskborne-elf/attack.png', frames: 7, duration: 640 },
+        attackCombo: { file: 'assets/sprites/duskborne-elf/attack.png', frames: 7, duration: 660 },
+        cast: { file: 'assets/sprites/duskborne-elf/cast.png', frames: 8, duration: 540 },
+        hurt: { file: 'assets/sprites/duskborne-elf/hurt.png', frames: 4, duration: 360 },
+        death: { file: 'assets/sprites/duskborne-elf/death.png', frames: 8, duration: 860 }
+      }
+    },
+    'duskborne-demonkin': {
+      frameWidth: 128, frameHeight: 128, scale: 1.08,
+      animations: {
+        idle: { file: 'assets/sprites/duskborne-demonkin/idle.png', frames: 6, duration: 1000, loop: true },
+        run: { file: 'assets/sprites/duskborne-demonkin/run.png', frames: 8, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/duskborne-demonkin/attack.png', frames: 12, duration: 620 },
+        attackHeavy: { file: 'assets/sprites/duskborne-demonkin/attack.png', frames: 12, duration: 700 },
+        attackCombo: { file: 'assets/sprites/duskborne-demonkin/attack.png', frames: 12, duration: 740 },
+        cast: { file: 'assets/sprites/duskborne-demonkin/cast.png', frames: 12, duration: 700 },
+        hurt: { file: 'assets/sprites/duskborne-demonkin/hurt.png', frames: 4, duration: 360 },
+        death: { file: 'assets/sprites/duskborne-demonkin/death.png', frames: 8, duration: 860 }
+      }
+    },
+    'battle-maid': {
+      frameWidth: 128, frameHeight: 128, scale: 1.05,
+      animations: {
+        idle: { file: 'assets/sprites/battle-maid/idle.png', frames: 12, duration: 1050, loop: true },
+        run: { file: 'assets/sprites/battle-maid/run.png', frames: 18, duration: 780, loop: true },
+        attack: { file: 'assets/sprites/battle-maid/attack.png', frames: 18, duration: 720 },
+        attackHeavy: { file: 'assets/sprites/battle-maid/attack.png', frames: 18, duration: 780 },
+        attackCombo: { file: 'assets/sprites/battle-maid/attack.png', frames: 18, duration: 820 },
+        cast: { file: 'assets/sprites/battle-maid/cast.png', frames: 18, duration: 740 },
+        hurt: { file: 'assets/sprites/battle-maid/hurt.png', frames: 12, duration: 360 },
+        death: { file: 'assets/sprites/battle-maid/death.png', frames: 12, duration: 860 }
+      }
     }
   };
-  const MARTIAL_SPRITE_PROFESSIONS = new Set(['rogue', 'swordsman', '武僧']);
+  const PROFESSION_SPRITE_PROFILES = {
+    warrior: 'severed-fang',
+    mage: 'evil-wizard',
+    rogue: 'blind-huntress',
+    priest: 'battle-maid',
+    shaman: 'duskborne-elf',
+    necro: 'duskborne-demonkin',
+    warlock: 'duskborne-demonkin',
+    swordsman: 'samurai',
+    hunter: 'duskborne-elf',
+    '武僧': 'samurai'
+  };
   const WEAPON_PRESENTATION = {
     greatsword: { kind: 'greatsword', anim: 'attackHeavy', color: '#e8e4d7', accent: '#b98a44' },
     longbow: { kind: 'bow', anim: 'attack', color: '#b98554', accent: '#e8d28d' },
@@ -79,6 +168,7 @@
 
   const R = 9, SIZE = 48, CX = Math.round(SIZE*Math.sqrt(3)*(R+2)), CY = Math.round(SIZE*1.5*(R+2));
   const dirs = [{q:1,r:0},{q:1,r:-1},{q:0,r:-1},{q:-1,r:0},{q:-1,r:1},{q:0,r:1}];
+  const SPIKE_TILE_KEYS = new Set(['0,-5','5,-5','5,0','0,5','-5,5','-5,0']);
   const key = c => `${c.q},${c.r}`;
   const cubeS = c => -c.q - c.r;
   const dist = (a,b) => Math.max(Math.abs(a.q-b.q), Math.abs(a.r-b.r), Math.abs(cubeS(a)-cubeS(b)));
@@ -90,7 +180,7 @@
   function tileType(c){
     const k = key(c);
     if(k==='0,0') return 'center';
-    if(new Set(['0,-5','5,-5','5,0','0,5','-5,5','-5,0']).has(k)) return 'spike';
+    if(SPIKE_TILE_KEYS.has(k)) return 'spike';
     if(k===`-${R},0` || k===`${R},0`) return 'start';
     return 'plain';
   }
@@ -176,32 +266,21 @@
   function renderArenaBackdrop(svg){
     const defs = addSvg(svg, 'defs');
     const floorGrad = addSvg(defs, 'radialGradient', { id:'arena-floor-grad', cx:'50%', cy:'48%', r:'58%' });
-    addSvg(floorGrad, 'stop', { offset:'0%', 'stop-color':'#725b43' });
-    addSvg(floorGrad, 'stop', { offset:'66%', 'stop-color':'#584537' });
-    addSvg(floorGrad, 'stop', { offset:'100%', 'stop-color':'#2a241f' });
+    addSvg(floorGrad, 'stop', { offset:'0%', 'stop-color':'#5f5743' });
+    addSvg(floorGrad, 'stop', { offset:'68%', 'stop-color':'#413b31' });
+    addSvg(floorGrad, 'stop', { offset:'100%', 'stop-color':'#171a15' });
     const clip = addSvg(defs, 'clipPath', { id:'arena-floor-clip' });
     addSvg(clip, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665 });
 
     const layer = addSvg(svg, 'g', { class:'arena-backdrop-layer' });
     addSvg(layer, 'rect', { x:0, y:0, width:BOARD_VIEW.width, height:BOARD_VIEW.height, class:'arena-night' });
 
-    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:1020, ry:765, class:'arena-stands' });
+    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:1010, ry:755, class:'arena-ground-shadow' });
     addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:920, ry:690, class:'arena-wall-outer' });
     addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665, class:'arena-floor' });
     addArenaSpeckles(layer, 'arena-floor-clip');
-    addArenaScars(layer, 'arena-floor-clip');
     addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665, class:'arena-floor-line' });
     addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:540, ry:400, class:'arena-inner-wear' });
-
-    for(let i=0;i<34;i++){
-      const angle = (Math.PI * 2 * i) / 34;
-      const x = CX + Math.cos(angle) * 970;
-      const y = CY + Math.sin(angle) * 720;
-      addSvg(layer, 'rect', {
-        x: x - 16, y: y - 9, width: 32, height: 18, rx: 2,
-        class: 'arena-crowd-dot', transform: `rotate(${angle * 180 / Math.PI + 90} ${x} ${y})`
-      });
-    }
   }
 
   function rollDetail(notation){
@@ -635,7 +714,7 @@
   }
 
   function spriteProfileKeyFor(player){
-    if (MARTIAL_SPRITE_PROFESSIONS.has(player?.professionKey)) return 'samurai';
+    if (PROFESSION_SPRITE_PROFILES[player?.professionKey]) return PROFESSION_SPRITE_PROFILES[player.professionKey];
     return player?.id === 2 ? 'knight-rose' : 'knight-blue';
   }
 
@@ -1634,6 +1713,37 @@ async function applyRewardList(player, rewards, labelPrefix){
     return highlightSet();
   }
 
+  function renderSpikeTowerComponent(layer, tile){
+    const {x,y} = hexToPixel(tile);
+    const g = addSvg(layer, 'g', { class:'map-component spike-tower-component', transform:`translate(${x} ${y})` });
+    addSvg(g, 'ellipse', { cx:0, cy:16, rx:30, ry:11, class:'map-component-shadow' });
+    addSvg(g, 'polygon', { points:'-31,12 -19,-24 -8,13', class:'spike-blade spike-blade-back' });
+    addSvg(g, 'polygon', { points:'-11,15 0,-34 12,15', class:'spike-blade spike-blade-front' });
+    addSvg(g, 'polygon', { points:'8,13 22,-22 31,12', class:'spike-blade spike-blade-back' });
+    addSvg(g, 'circle', { cx:0, cy:7, r:17, class:'spike-core' });
+    addSvg(g, 'circle', { cx:0, cy:7, r:5, class:'spike-glint' });
+    return g;
+  }
+
+  function renderBlackHoleComponent(layer, tile){
+    const {x,y} = hexToPixel(tile);
+    const g = addSvg(layer, 'g', { class:'map-component black-hole-component', transform:`translate(${x} ${y})` });
+    addSvg(g, 'ellipse', { cx:0, cy:19, rx:40, ry:13, class:'map-component-shadow' });
+    addSvg(g, 'circle', { cx:0, cy:0, r:35, class:'black-hole-rim' });
+    addSvg(g, 'ellipse', { cx:0, cy:0, rx:45, ry:13, class:'black-hole-orbit', transform:'rotate(-18)' });
+    addSvg(g, 'ellipse', { cx:0, cy:0, rx:33, ry:9, class:'black-hole-orbit black-hole-orbit-inner', transform:'rotate(24)' });
+    addSvg(g, 'circle', { cx:0, cy:0, r:20, class:'black-hole-core' });
+    addSvg(g, 'circle', { cx:-7, cy:-7, r:5, class:'black-hole-glint' });
+    return g;
+  }
+
+  function renderBoardComponents(svg, blackHoleOn){
+    const layer = addSvg(svg, 'g', { class:'map-component-layer' });
+    state.board.filter(t => t.type === 'spike').forEach(t => renderSpikeTowerComponent(layer, t));
+    const center = state.boardMap.get('0,0');
+    if(blackHoleOn && center) renderBlackHoleComponent(layer, center);
+  }
+
   function renderBoard(){
     const svg = $('board'); svg.innerHTML = '';
     const blackHoleOn = isBlackHoleEnabled();
@@ -1644,15 +1754,16 @@ async function applyRewardList(player, rewards, labelPrefix){
       const {x,y}=hexToPixel(t); const g=document.createElementNS(svgNS,'g'); g.classList.add('tile');
       const kk=key(t);
       const centerActive = blackHoleOn && t.type === 'center';
+      const isSpikeTile = t.type === 'spike';
       if(hl.moves.has(kk)) g.classList.add('valid-move');
       if(hl.targets.has(kk)) g.classList.add('valid-target');
       if(kk===key(active.pos)) g.classList.add('selected-origin');
       g.onclick = ()=>tileClick(t);
       const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points', hexPoints(x,y));
-      const inDanger = ((isSpikeDangerTile(t) && t.type !== 'spike') || (isTokenDangerTile(t) && !getMapToken(t)));
-      poly.setAttribute('fill', centerActive?'#4d315c': t.type==='spike'?'#7d5353': t.type==='start'?'#9db36f': inDanger ? '#8c4c4c' : '#d8c384');
-      poly.setAttribute('opacity', centerActive ? '0.34' : t.type==='spike' ? '0.28' : inDanger ? '0.24' : t.type==='start' ? '0.18' : '0.07'); g.appendChild(poly);
+      const inDanger = ((isSpikeDangerTile(t) && !isSpikeTile) || (isTokenDangerTile(t) && !getMapToken(t)));
+      poly.setAttribute('fill', centerActive?'#4d315c': isSpikeTile?'#7d5353': t.type==='start'?'#9db36f': inDanger ? '#8c4c4c' : '#d8c384');
+      poly.setAttribute('opacity', centerActive ? '0.38' : isSpikeTile ? '0.3' : inDanger ? '0.28' : t.type==='start' ? '0.24' : '0.18'); g.appendChild(poly);
       if(inDanger){
         const zone=document.createElementNS(svgNS,'polygon');
         zone.setAttribute('points', hexPoints(x,y));
@@ -1663,12 +1774,7 @@ async function applyRewardList(player, rewards, labelPrefix){
         g.appendChild(zone);
       }
       const mapTok = getMapToken(t);
-      if(centerActive || t.type==='spike' || state.traps.has(kk) || mapTok){
-        if(t.type==='spike'){
-          const pillar=document.createElementNS(svgNS,'circle');
-          pillar.setAttribute('cx',x); pillar.setAttribute('cy',y); pillar.setAttribute('r',16); pillar.setAttribute('fill','#aa7d7d'); pillar.setAttribute('opacity','0.9');
-          g.appendChild(pillar);
-        }
+      if(state.traps.has(kk) || mapTok){
         if(mapTok && mapTok.kind==='permanent_pillar'){
           const pillar=document.createElementNS(svgNS,'circle');
           pillar.setAttribute('cx',x); pillar.setAttribute('cy',y); pillar.setAttribute('r',14); pillar.setAttribute('fill','#7f6b4b'); pillar.setAttribute('opacity','0.95');
@@ -1687,12 +1793,13 @@ async function applyRewardList(player, rewards, labelPrefix){
           g.appendChild(trapIcon);
         }
         const txt=document.createElementNS(svgNS,'text');
-        txt.setAttribute('x',x); txt.setAttribute('y',centerActive||t.type==='spike'||(mapTok&&mapTok.kind==='permanent_pillar')?y+4:y-20); txt.setAttribute('text-anchor','middle');
-        txt.textContent = centerActive?I18N().t('black_hole','黑洞'):t.type==='spike'?I18N().t('spike','刺'):mapTok?mapTok.name:I18N().t('trap','陷阱');
+        txt.setAttribute('x',x); txt.setAttribute('y',(mapTok&&mapTok.kind==='permanent_pillar')?y+4:y-20); txt.setAttribute('text-anchor','middle');
+        txt.textContent = mapTok?mapTok.name:I18N().t('trap','陷阱');
         g.appendChild(txt);
       }
       svg.appendChild(g);
     });
+    renderBoardComponents(svg, blackHoleOn);
     state.players.filter(p=>p.alive || p.anim === 'death').forEach(p=>{
       const {x,y}=hexToPixel(p.pos);
       renderPixelUnit(svg, p, x, y);
@@ -2052,8 +2159,8 @@ async function applyRewardList(player, rewards, labelPrefix){
   }
 
   function clampBoardZoom(value){
-    const min = window.innerWidth < 720 ? 0.32 : 0.42;
-    const max = window.innerWidth < 720 ? 0.82 : 1.15;
+    const min = window.innerWidth < 720 ? 0.28 : 0.38;
+    const max = window.innerWidth < 720 ? 0.9 : 1.25;
     return Math.max(min, Math.min(max, Number(value || state.boardZoom || 0.7)));
   }
 
@@ -2075,12 +2182,13 @@ async function applyRewardList(player, rewards, labelPrefix){
       setBoardZoom(state.boardZoom, state.boardZoomAuto);
       return;
     }
-    const hand = $('hand-panel');
     const wrapRect = wrap.getBoundingClientRect();
-    const handRect = hand ? hand.getBoundingClientRect() : { height: 0 };
     const availableW = Math.max(360, wrap.clientWidth - 18);
-    const availableH = Math.max(300, window.innerHeight - wrapRect.top - handRect.height - 26);
-    const fit = Math.min(availableW / BOARD_VIEW.width, availableH / BOARD_VIEW.height);
+    const handReserve = window.innerWidth < 720 ? 160 : 118;
+    const availableH = Math.max(300, window.innerHeight - wrapRect.top - handReserve);
+    const fitted = Math.min(availableW / BOARD_VIEW.width, availableH / BOARD_VIEW.height);
+    const preferredMin = window.innerWidth >= 1500 ? 0.64 : window.innerWidth >= 1000 ? 0.56 : window.innerWidth >= 720 ? 0.48 : 0.32;
+    const fit = Math.max(preferredMin, fitted);
     setBoardZoom(fit, true);
   }
 
