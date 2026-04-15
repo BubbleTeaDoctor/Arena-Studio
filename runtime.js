@@ -63,7 +63,7 @@ window.STUDIO_RUNTIME = (() => {
   function baseRuleset() {
     return {
       id: DEFAULT_ID,
-      name: "标准默认规则",
+      name: window.DEFAULT_STUDIO_RULESET_NAME || "标准默认规则",
       editable: false,
       data: deep(window.DEFAULT_STUDIO_DATA)
     };
