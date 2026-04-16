@@ -143,19 +143,72 @@
         hurt: { file: 'assets/sprites/battle-maid/hurt.png', frames: 12, duration: 360 },
         death: { file: 'assets/sprites/battle-maid/death.png', frames: 12, duration: 860 }
       }
+    },
+    'fire-warrior': {
+      frameWidth: 72, frameHeight: 80, scale: 1.55, footOffset: 24,
+      animations: {
+        idle: { file: 'assets/sprites/fire-warrior/idle.png', frames: 16, duration: 1050, loop: true },
+        run: { file: 'assets/sprites/fire-warrior/run.png', frames: 16, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/fire-warrior/attack.png', frames: 8, duration: 560 },
+        attackHeavy: { file: 'assets/sprites/fire-warrior/attack-heavy.png', frames: 8, duration: 620 },
+        attackCombo: { file: 'assets/sprites/fire-warrior/attack-heavy.png', frames: 8, duration: 660 },
+        cast: { file: 'assets/sprites/fire-warrior/cast.png', frames: 18, duration: 760 },
+        hurt: { file: 'assets/sprites/fire-warrior/hurt.png', frames: 8, duration: 360 },
+        death: { file: 'assets/sprites/fire-warrior/death.png', frames: 22, duration: 900 }
+      }
+    },
+    ninja: {
+      frameWidth: 50, frameHeight: 37, scale: 2.65, footOffset: 12,
+      animations: {
+        idle: { file: 'assets/sprites/ninja/idle.png', frames: 4, duration: 850, loop: true },
+        run: { file: 'assets/sprites/ninja/run.png', frames: 6, duration: 560, loop: true },
+        attack: { file: 'assets/sprites/ninja/attack.png', frames: 5, duration: 440 },
+        attackHeavy: { file: 'assets/sprites/ninja/attack-heavy.png', frames: 6, duration: 520 },
+        attackCombo: { file: 'assets/sprites/ninja/attack-heavy.png', frames: 6, duration: 560 },
+        cast: { file: 'assets/sprites/ninja/cast.png', frames: 4, duration: 520 },
+        hurt: { file: 'assets/sprites/ninja/hurt.png', frames: 3, duration: 320 },
+        death: { file: 'assets/sprites/ninja/death.png', frames: 7, duration: 760 }
+      }
+    },
+    'countess-vampire': {
+      frameWidth: 128, frameHeight: 128, scale: 1.1, footOffset: 42,
+      animations: {
+        idle: { file: 'assets/sprites/countess-vampire/idle.png', frames: 5, duration: 950, loop: true },
+        run: { file: 'assets/sprites/countess-vampire/run.png', frames: 6, duration: 680, loop: true },
+        attack: { file: 'assets/sprites/countess-vampire/attack.png', frames: 6, duration: 560 },
+        attackHeavy: { file: 'assets/sprites/countess-vampire/attack-heavy.png', frames: 6, duration: 620 },
+        attackCombo: { file: 'assets/sprites/countess-vampire/attack-heavy.png', frames: 6, duration: 660 },
+        cast: { file: 'assets/sprites/countess-vampire/cast.png', frames: 4, duration: 560 },
+        hurt: { file: 'assets/sprites/countess-vampire/hurt.png', frames: 2, duration: 320 },
+        death: { file: 'assets/sprites/countess-vampire/death.png', frames: 8, duration: 860 }
+      }
+    },
+    'gothic-monk': {
+      frameWidth: 82, frameHeight: 60, scale: 2.0, footOffset: 16,
+      animations: {
+        idle: { file: 'assets/sprites/gothic-monk/idle.png', frames: 4, duration: 820, loop: true },
+        run: { file: 'assets/sprites/gothic-monk/run.png', frames: 6, duration: 560, loop: true },
+        attack: { file: 'assets/sprites/gothic-monk/attack.png', frames: 6, duration: 460 },
+        attackHeavy: { file: 'assets/sprites/gothic-monk/attack-heavy.png', frames: 5, duration: 520 },
+        attackCombo: { file: 'assets/sprites/gothic-monk/attack-heavy.png', frames: 5, duration: 560 },
+        cast: { file: 'assets/sprites/gothic-monk/cast.png', frames: 5, duration: 520 },
+        hurt: { file: 'assets/sprites/gothic-monk/hurt.png', frames: 2, duration: 320 },
+        death: { file: 'assets/sprites/gothic-monk/death.png', frames: 2, duration: 720 }
+      }
     }
   };
   const PROFESSION_SPRITE_PROFILES = {
     warrior: 'severed-fang',
     mage: 'evil-wizard',
-    rogue: 'blind-huntress',
+    rogue: 'ninja',
     priest: 'battle-maid',
-    shaman: 'duskborne-elf',
-    necro: 'duskborne-demonkin',
+    shaman: 'fire-warrior',
+    necro: 'countess-vampire',
     warlock: 'duskborne-demonkin',
     swordsman: 'samurai',
     hunter: 'duskborne-elf',
-    '武僧': 'samurai'
+    monk: 'gothic-monk',
+    '武僧': 'gothic-monk'
   };
   const WEAPON_PRESENTATION = {
     greatsword: { kind: 'greatsword', anim: 'attackHeavy', color: '#e8e4d7', accent: '#b98a44' },
@@ -555,6 +608,9 @@
       summons: { skeleton:0, bone_dragon:0 },
       anim: 'idle',
       animTimer: null,
+      facing: slot===1 ? 1 : -1,
+      moveAnim: null,
+      moveAnimTimer: null,
       marked: false,
     };
   }
@@ -865,7 +921,7 @@ function attemptReactiveMove(player, triggerLabel){
     return false;
   }
   const from = key(player.pos);
-  player.pos = dst;
+  movePlayerTo(player, dst, { duration: 260 });
   log(`${player.label} 因 ${triggerLabel || '反应位移'} 随机移动：${from} → ${key(dst)}。`);
   return true;
 }
@@ -902,6 +958,77 @@ function finalizePlayerState(player){
   }
 }
 
+function setFacingToward(player, tile, fromTile = player?.pos){
+  if(!player || !tile || !fromTile) return;
+  const fromPoint = hexToPixel(fromTile);
+  const toPoint = hexToPixel(tile);
+  const dx = toPoint.x - fromPoint.x;
+  if(Math.abs(dx) > 1) player.facing = dx >= 0 ? 1 : -1;
+}
+
+function clearUnitMoveAnim(player){
+  if(!player) return;
+  if(player.moveAnimTimer?.interval) clearInterval(player.moveAnimTimer.interval);
+  if(player.moveAnimTimer?.timeout) clearTimeout(player.moveAnimTimer.timeout);
+  player.moveAnimTimer = null;
+  player.moveAnim = null;
+}
+
+function renderPointForPlayer(player){
+  const motion = player?.moveAnim;
+  if(!motion) return hexToPixel(player.pos);
+  const elapsed = Math.max(0, performance.now() - motion.startedAt);
+  const t = Math.min(1, elapsed / Math.max(1, motion.duration || 1));
+  const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const from = hexToPixel(motion.from);
+  const to = hexToPixel(motion.to);
+  return {
+    x: from.x + (to.x - from.x) * eased,
+    y: from.y + (to.y - from.y) * eased
+  };
+}
+
+function movePlayerTo(player, tile, opts = {}){
+  if(!player || !tile) return Promise.resolve(false);
+  const from = deep(player.pos);
+  const to = deep(tile);
+  if(key(from) === key(to)) return Promise.resolve(false);
+  setFacingToward(player, to, from);
+  clearUnitMoveAnim(player);
+  if(opts.instant){
+    player.pos = to;
+    if(state.board?.length && $('board')) renderBoard();
+    return Promise.resolve(true);
+  }
+  const distance = Math.max(1, dist(from, to));
+  const duration = Number(opts.duration || Math.min(620, Math.max(260, 170 * distance)));
+  if(player.animTimer){
+    clearTimeout(player.animTimer);
+    player.animTimer = null;
+  }
+  player.anim = opts.anim || 'run';
+  const motion = { from, to, startedAt: performance.now(), duration };
+  player.moveAnim = motion;
+  player.pos = to;
+  if(state.board?.length && $('board')) renderBoard();
+  return new Promise(resolve => {
+    const finish = () => {
+      if(player.moveAnim === motion) player.moveAnim = null;
+      if(player.anim === 'run') player.anim = 'idle';
+      if(player.moveAnimTimer?.interval === interval) clearInterval(interval);
+      if(player.moveAnimTimer?.timeout === timeout) clearTimeout(timeout);
+      if(player.moveAnimTimer?.interval === interval) player.moveAnimTimer = null;
+      if(state.board?.length && $('board')) renderBoard();
+      resolve(true);
+    };
+    const interval = setInterval(() => {
+      if(player.moveAnim === motion && state.board?.length && $('board')) renderBoard();
+    }, 32);
+    const timeout = setTimeout(finish, duration + 34);
+    player.moveAnimTimer = { interval, timeout };
+  });
+}
+
 function playUnitAnim(player, anim, duration){
   if(!player) return;
   if(player.animTimer) clearTimeout(player.animTimer);
@@ -930,7 +1057,10 @@ function dealDamage(attacker, target, rawDamage, meta){
   const allowReactions = info.allowReactions !== false;
   let damage = Math.max(0, Number(rawDamage || 0));
   if (!target || !target.alive) return { rawDamage: damage, blocked: 0, finalDamage: 0, dodged: false };
-  if(attacker && attacker !== target) playUnitAnim(attacker, info.anim || weaponAttackAnim(attacker));
+  if(attacker && attacker !== target){
+    setFacingToward(attacker, target.pos);
+    playUnitAnim(attacker, info.anim || weaponAttackAnim(attacker));
+  }
 
   if (damage > 0 && (target.buffs?.dodgeNextDamage || 0) > 0) {
     target.buffs.dodgeNextDamage = Math.max(0, Number(target.buffs.dodgeNextDamage || 0) - 1);
@@ -1204,13 +1334,13 @@ async function applyRewardList(player, rewards, labelPrefix){
     setTimeout(fitBoardZoom, 0);
   }
 
-  function startTurn(){
+  async function startTurn(){
     if(state.winner) return;
     const p = current();
     if(!p.alive) return nextTurn();
     resetTurnState(p);
     p.block = 0;
-    if(isBlackHoleEnabled()) applyBlackHolePull();
+    if(isBlackHoleEnabled()) await applyBlackHolePull();
     if(p.statuses.dot){
       const cfg = p.statuses.dot;
       const dmg = loggedRoll(`${p.label} DOT`, cfg.damagePerTick || '1');
@@ -1246,13 +1376,13 @@ async function applyRewardList(player, rewards, labelPrefix){
     startTurn();
   }
 
-  function applyBlackHolePull(){
+  async function applyBlackHolePull(){
     const center={q:0,r:0};
-    state.players.forEach(p=>{
-      if(!p.alive) return;
+    for(const p of state.players){
+      if(!p.alive) continue;
       const opts = neighbors(p.pos).filter(c=>state.boardMap.has(key(c)) && !isBlockedTile(c)).filter(c=>{ const occ=getPlayerAt(c); return !occ || occ.id===p.id; }).sort((a,b)=>dist(a,center)-dist(b,center));
-      if(opts[0] && key(opts[0])!==key(p.pos)){ p.pos = opts[0]; enterTile(p); }
-    });
+      if(opts[0] && key(opts[0])!==key(p.pos)){ await movePlayerTo(p, opts[0], { duration: 260 }); enterTile(p); }
+    }
   }
 
   function enterTile(player){
@@ -1597,7 +1727,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       }
       if(cardDef.template==='dash_hit'){
         const adj = neighbors(target.pos).filter(c=>state.boardMap.has(key(c)) && !getPlayerAt(c)).sort((a,b)=>dist(p.pos,a)-dist(p.pos,b))[0];
-        if(adj){ p.pos = adj; }
+        if(adj){ await movePlayerTo(p, adj, { duration: 340 }); }
       }
       if(cardDef.template==='mark_target_for_bonus'){
         target.marked = true;
@@ -1927,7 +2057,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     });
     renderBoardComponents(svg, blackHoleOn);
     state.players.filter(p=>p.alive || p.anim === 'death').forEach(p=>{
-      const {x,y}=hexToPixel(p.pos);
+      const {x,y}=renderPointForPlayer(p);
       renderPixelUnit(svg, p, x, y);
     });
     renderHazardEffects(svg);
@@ -2059,7 +2189,7 @@ async function applyRewardList(player, rewards, labelPrefix){
 
     const body = document.createElementNS(svgNS, 'g');
     body.setAttribute('class', 'sprite-body');
-    body.setAttribute('transform', p.id === 2 ? `translate(${x} ${y}) scale(-1 1)` : `translate(${x} ${y})`);
+    body.setAttribute('transform', (p.facing || 1) < 0 ? `translate(${x} ${y}) scale(-1 1)` : `translate(${x} ${y})`);
 
     appendNativeSprite(body, {
       file: anim.file,
@@ -2094,7 +2224,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const s = 4;
     const bx = x - 30;
     const by = y - 78;
-    const dir = p.id === 1 ? 1 : -1;
+    const dir = (p.facing || 1) < 0 ? -1 : 1;
     const anim = vectorAnimName(p.anim);
     const g = document.createElementNS(svgNS, 'g');
     g.setAttribute('class', `pixel-unit pixel-unit-p${p.id} pixel-unit-${anim}`);
@@ -2213,14 +2343,18 @@ async function applyRewardList(player, rewards, labelPrefix){
     renderHand();
   }
 
-  function tileClick(tile){
+  async function tileClick(tile){
     const p=current();
     if(state.pending?.type==='discard') return;
     const occ=getPlayerAt(tile);
     if(state.pending?.type==='move' && !occ){
       const reachable=getReachableTiles(p);
       if(reachable.has(key(tile))){
-        p.turn.move = true; p.turn.movedDistance = dist(p.pos, tile); p.pos = deep(tile); enterTile(p); finishAfterAction();
+        p.turn.move = true;
+        p.turn.movedDistance = dist(p.pos, tile);
+        await movePlayerTo(p, tile);
+        enterTile(p);
+        finishAfterAction();
       }
       return;
     }
@@ -2237,7 +2371,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
   }
 
-  function runAiTurn(){
+  async function runAiTurn(){
     const p=current(); if(!p.alive || p.type!=='ai' || state.winner || state.pending?.type==='discard') return;
     const enemy=enemyOf(p);
     const playable = p.hand.map((h,i)=>({h,i,def:getCardDef(h.cardKey)})).filter(x=>x.def && cardCanBePlayed(p,x.h,x.def));
@@ -2246,7 +2380,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(!p.turn.basicSpent && canBasicTarget(p,enemy)){ useBasicAttack(enemy); return; }
     if(!p.turn.move){
       const reachable=[...getReachableTiles(p)].map(s=>{const [q,r]=s.split(',').map(Number); return {q,r};}).sort((a,b)=>dist(a,enemy.pos)-dist(b,enemy.pos));
-      if(reachable[0]){ p.turn.move=true; p.turn.movedDistance=dist(p.pos,reachable[0]); p.pos=reachable[0]; enterTile(p); finishAfterAction(); return; }
+      if(reachable[0]){ p.turn.move=true; p.turn.movedDistance=dist(p.pos,reachable[0]); await movePlayerTo(p, reachable[0]); enterTile(p); finishAfterAction(); return; }
     }
     endTurn();
   }
