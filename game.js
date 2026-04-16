@@ -172,6 +172,7 @@
   const I18N = () => window.STUDIO_I18N || { t:(k,f)=>f||k, entity:(type,key,fb)=>fb||key, getLang:()=> 'zh' };
 
   const R = 9, SIZE = 48, CX = Math.round(SIZE*Math.sqrt(3)*(R+2)), CY = Math.round(SIZE*1.5*(R+2));
+  const BOARD_TILT = { yScale: 0.82 };
   const dirs = [{q:1,r:0},{q:1,r:-1},{q:0,r:-1},{q:-1,r:0},{q:-1,r:1},{q:0,r:1}];
   const SPIKE_TILE_KEYS = new Set(['0,-5','5,-5','5,0','0,5','-5,5','-5,0']);
   const key = c => `${c.q},${c.r}`;
@@ -195,10 +196,14 @@
     return out;
   }
   function hexToPixel(c){
-    return { x: CX + SIZE*Math.sqrt(3)*(c.q + c.r/2), y: CY + SIZE*1.5*c.r };
+    const rawY = CY + SIZE*1.5*c.r;
+    return {
+      x: CX + SIZE*Math.sqrt(3)*(c.q + c.r/2),
+      y: CY + (rawY - CY) * BOARD_TILT.yScale
+    };
   }
   function hexPoints(x,y){
-    const pts=[]; for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); pts.push(`${x+SIZE*Math.cos(a)},${y+SIZE*Math.sin(a)}`); } return pts.join(' ');
+    const pts=[]; for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); pts.push(`${x+SIZE*Math.cos(a)},${y+SIZE*BOARD_TILT.yScale*Math.sin(a)}`); } return pts.join(' ');
   }
 
   function addSvg(parent, tag, attrs = {}){

@@ -94,7 +94,7 @@ body.game-theme{
   --accent:#d7a65f;
   --warn:#efc46e;
   --danger:#d7654c;
-  --move:#77b8cf;
+  --move:#9dff39;
   --target:#ff4545;
   background:
     linear-gradient(rgba(244,215,162,.028) 1px, transparent 1px),
@@ -168,7 +168,7 @@ body.game-theme{
 }
 .arena-night,.arena-ground-shadow,.arena-wall-outer,.arena-floor,.arena-floor-line,.arena-inner-wear{display:none}
 .game-theme .tile polygon{stroke:rgba(248,225,170,.82);stroke-width:2.6}
-.game-theme .tile.valid-move polygon{stroke:var(--move);filter:drop-shadow(0 0 6px rgba(119,184,207,.5))}
+.game-theme .tile.valid-move polygon{fill:rgba(112,255,40,.34);opacity:.78;stroke:var(--move);stroke-width:5;filter:drop-shadow(0 0 10px rgba(157,255,57,.78))}
 .game-theme .tile.valid-target polygon{fill:#a92f34;opacity:.62;stroke:var(--target);stroke-width:4;filter:drop-shadow(0 0 9px rgba(255,69,69,.72))}
 .game-theme .tile text{font-size:13px;font-weight:800;fill:#f9edc5;paint-order:stroke;stroke:#080a08;stroke-width:4px}
 .map-component-layer,.map-component{pointer-events:none}
