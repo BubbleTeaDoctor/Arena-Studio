@@ -194,9 +194,10 @@ body.game-theme{
 .map-component-shadow{fill:rgba(0,0,0,.42)}
 .spike-floor-sprite,.black-hole-fx{image-rendering:pixelated}
 .spike-floor-sprite{filter:drop-shadow(0 4px 0 rgba(0,0,0,.35)) drop-shadow(0 0 7px rgba(255,86,86,.32))}
-.golem-sprite-frame{overflow:hidden;filter:drop-shadow(0 5px 0 rgba(0,0,0,.42)) drop-shadow(0 0 9px rgba(160,218,230,.25))}
-.golem-attack .golem-sprite-frame{filter:drop-shadow(0 5px 0 rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(110,231,255,.55))}
-.golem-shadow{fill:rgba(0,0,0,.48)}
+.obelisk-sprite-frame{overflow:hidden;filter:drop-shadow(0 6px 0 rgba(0,0,0,.42)) drop-shadow(0 0 10px rgba(0,235,255,.24))}
+.obelisk-shadow{fill:rgba(0,0,0,.5)}
+.hazard-fx-layer,.lightning-strike-component{pointer-events:none}
+.lightning-fx-frame{overflow:hidden;filter:drop-shadow(0 0 8px rgba(255,92,72,.82)) drop-shadow(0 0 14px rgba(255,190,72,.42))}
 .black-hole-rim{fill:#5c4565;stroke:#d4a7ff;stroke-width:3;opacity:.88}
 .black-hole-core{fill:#070509;stroke:#111;stroke-width:2}
 .black-hole-fx{opacity:.9;filter:drop-shadow(0 0 9px rgba(172,84,255,.62))}

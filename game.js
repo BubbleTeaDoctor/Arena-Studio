@@ -9,17 +9,22 @@
   const BOARD_VIEW = { width: 2100, height: 1750 };
   const MAP_ASSETS = {
     arenaBackdrop: 'assets/map/octopath-arena-backdrop.png',
-    golemIdle: 'assets/map/golem/idle-0.png',
+    obeliskIdle: 'assets/map/obelisk/idle.png',
     spikeFloor: 'assets/map/trap-spikes-floor.png',
     voidFx: 'assets/map/void-fx.png'
   };
-  const GOLEM_ATTACK_FRAMES = Array.from({ length: 9 }, (_, i) => `assets/map/golem/attack-${i}.png`);
-  const GOLEM_SPRITE = {
-    frameWidth: 100,
-    frameHeight: 100,
-    scale: 1.08,
-    idle: { files: [MAP_ASSETS.golemIdle], duration: 980, loop: true },
-    attack: { files: GOLEM_ATTACK_FRAMES, duration: 760, loop: false }
+  const LIGHTNING_FRAMES = Array.from({ length: 14 }, (_, i) => `assets/map/fx/lightning/frame-${i}.png`);
+  const OBELISK_SPRITE = {
+    frameWidth: 200,
+    frameHeight: 400,
+    scale: 0.28
+  };
+  const LIGHTNING_FX = {
+    frameWidth: 64,
+    frameHeight: 64,
+    scale: 1.65,
+    duration: 560,
+    files: LIGHTNING_FRAMES
   };
   const SPRITE_PROFILES = {
     'knight-blue': {
@@ -614,7 +619,7 @@
     return neighbors(tile).find(c => state.boardMap.get(key(c))?.type === 'spike') || null;
   }
 
-  function triggerSpikeGolemAttack(tile){
+  function triggerObeliskLightning(tile){
     const source = spikeSourceForDangerTile(tile);
     if(!source) return;
     const k = key(source);
@@ -623,17 +628,17 @@
       clearInterval(oldTimers.interval);
       clearTimeout(oldTimers.timeout);
     }
-    state.mapHazardAnims.set(k, { name: 'attack', startedAt: performance.now() });
+    state.mapHazardAnims.set(k, { name: 'lightning', startedAt: performance.now(), target: deep(tile) });
     if(state.board?.length && $('board')) renderBoard();
     const interval = setInterval(() => {
-      if(state.mapHazardAnims.get(k)?.name === 'attack' && state.board?.length && $('board')) renderBoard();
-    }, 80);
+      if(state.mapHazardAnims.get(k)?.name === 'lightning' && state.board?.length && $('board')) renderBoard();
+    }, 45);
     const timeout = setTimeout(() => {
       clearInterval(interval);
       state.mapHazardAnims.delete(k);
       state.mapHazardTimers.delete(k);
       if(state.board?.length && $('board')) renderBoard();
-    }, GOLEM_SPRITE.attack.duration);
+    }, LIGHTNING_FX.duration);
     state.mapHazardTimers.set(k, { interval, timeout });
   }
 
@@ -1252,7 +1257,7 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function enterTile(player){
     const t = state.boardMap.get(key(player.pos)); if(!t) return;
-    if(isSpikeDangerTile(player.pos)){ triggerSpikeGolemAttack(player.pos); const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 触碰守卫石像危险区域，受到 ${dmg} 伤害。`); }
+    if(isSpikeDangerTile(player.pos)){ triggerObeliskLightning(player.pos); const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 触碰飞行方尖碑危险区域，受到 ${dmg} 伤害。`); }
     if(isTokenDangerTile(player.pos)){ const tok = getMapToken(player.pos) || neighbors(player.pos).map(getMapToken).find(Boolean); const expr = tok?.damage || '2d8'; const dmg = loggedRoll(`${player.label} ${tok?.name || '危险区'}伤害`, resolvePlayerNotation(player, expr)); takePureDamage(player, dmg); log(`${player.label} 触碰 ${tok?.name || '危险区'}，受到 ${dmg} 伤害。`); }
     if(isBlackHoleEnabled() && t.type==='center'){ const dmg = loggedRoll(`${player.label} 黑洞中心伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 被黑洞中心撕扯，受到 ${dmg} 伤害。`); }
     const trap = state.traps.get(key(player.pos));
@@ -1792,32 +1797,46 @@ async function applyRewardList(player, rewards, labelPrefix){
     return '0.24';
   }
 
-  function renderSpikeTowerComponent(layer, tile){
+  function renderObeliskComponent(layer, tile){
     const {x,y} = hexToPixel(tile);
-    const animState = state.mapHazardAnims.get(key(tile));
-    const animName = animState?.name || 'idle';
-    const anim = GOLEM_SPRITE[animName] || GOLEM_SPRITE.idle;
-    const frameMs = Number(anim.duration || 600) / Math.max(1, anim.files.length);
-    const elapsed = animState?.startedAt ? Math.max(0, performance.now() - animState.startedAt) : 0;
-    const frameIndex = animName === 'attack' ? Math.min(anim.files.length - 1, Math.floor(elapsed / frameMs)) : 0;
-    const displayW = GOLEM_SPRITE.frameWidth * GOLEM_SPRITE.scale;
-    const displayH = GOLEM_SPRITE.frameHeight * GOLEM_SPRITE.scale;
-    const g = addSvg(layer, 'g', { class:`map-component spike-tower-component golem-component golem-${animName}`, transform:`translate(${x} ${y})` });
-    addSvg(g, 'ellipse', { cx:0, cy:19, rx:42, ry:13, class:'map-component-shadow golem-shadow' });
+    const displayW = OBELISK_SPRITE.frameWidth * OBELISK_SPRITE.scale;
+    const displayH = OBELISK_SPRITE.frameHeight * OBELISK_SPRITE.scale;
+    const g = addSvg(layer, 'g', { class:'map-component obelisk-component', transform:`translate(${x} ${y})` });
+    addSvg(g, 'ellipse', { cx:0, cy:20, rx:32, ry:9, class:'map-component-shadow obelisk-shadow' });
     appendNativeSprite(g, {
-      file: anim.files[frameIndex] || anim.files[0],
-      frameWidth: GOLEM_SPRITE.frameWidth,
-      frameHeight: GOLEM_SPRITE.frameHeight,
+      file: MAP_ASSETS.obeliskIdle,
+      frameWidth: OBELISK_SPRITE.frameWidth,
+      frameHeight: OBELISK_SPRITE.frameHeight,
       frames: 1,
-      scale: GOLEM_SPRITE.scale,
-      duration: anim.duration,
-      loop: !!anim.loop,
+      scale: OBELISK_SPRITE.scale,
       x: -displayW / 2,
-      y: -displayH + 26,
-      className: 'sprite-frame-svg golem-sprite-frame',
-      imageClass: 'sprite-sheet-image golem-sprite-image'
+      y: -displayH + 30,
+      className: 'sprite-frame-svg obelisk-sprite-frame',
+      imageClass: 'sprite-sheet-image obelisk-sprite-image'
     });
     return g;
+  }
+
+  function renderLightningEffect(layer, fxState){
+    if(!fxState?.target) return;
+    const {x,y} = hexToPixel(fxState.target);
+    const frameMs = LIGHTNING_FX.duration / Math.max(1, LIGHTNING_FX.files.length);
+    const elapsed = Math.max(0, performance.now() - fxState.startedAt);
+    const frameIndex = Math.min(LIGHTNING_FX.files.length - 1, Math.floor(elapsed / frameMs));
+    const displayW = LIGHTNING_FX.frameWidth * LIGHTNING_FX.scale;
+    const displayH = LIGHTNING_FX.frameHeight * LIGHTNING_FX.scale;
+    const g = addSvg(layer, 'g', { class:'map-component lightning-strike-component', transform:`translate(${x} ${y})` });
+    appendNativeSprite(g, {
+      file: LIGHTNING_FX.files[frameIndex],
+      frameWidth: LIGHTNING_FX.frameWidth,
+      frameHeight: LIGHTNING_FX.frameHeight,
+      frames: 1,
+      scale: LIGHTNING_FX.scale,
+      x: -displayW / 2,
+      y: -displayH + 20,
+      className: 'sprite-frame-svg lightning-fx-frame',
+      imageClass: 'sprite-sheet-image lightning-fx-image'
+    });
   }
 
   function renderBlackHoleComponent(layer, tile){
@@ -1841,9 +1860,14 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function renderBoardComponents(svg, blackHoleOn){
     const layer = addSvg(svg, 'g', { class:'map-component-layer' });
-    state.board.filter(t => t.type === 'spike' && SPIKE_TILE_KEYS.has(key(t))).forEach(t => renderSpikeTowerComponent(layer, t));
+    state.board.filter(t => t.type === 'spike' && SPIKE_TILE_KEYS.has(key(t))).forEach(t => renderObeliskComponent(layer, t));
     const center = state.boardMap.get('0,0');
     if(blackHoleOn && center) renderBlackHoleComponent(layer, center);
+  }
+
+  function renderHazardEffects(svg){
+    const layer = addSvg(svg, 'g', { class:'hazard-fx-layer' });
+    state.mapHazardAnims.forEach(fxState => renderLightningEffect(layer, fxState));
   }
 
   function renderBoard(){
@@ -1906,6 +1930,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       const {x,y}=hexToPixel(p.pos);
       renderPixelUnit(svg, p, x, y);
     });
+    renderHazardEffects(svg);
   }
 
   function unitPalette(player){
