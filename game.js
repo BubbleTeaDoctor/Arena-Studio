@@ -7,6 +7,7 @@
   const DEFAULT_MATCH_OPTIONS = { blackHoleEnabled: true, drawOpening: 6, drawPerTurn: 2 };
   const BOARD_VIEW = { width: 2100, height: 1750 };
   const MAP_ASSETS = {
+    arenaBackdrop: 'assets/map/octopath-arena-backdrop.png',
     spikeFloor: 'assets/map/trap-spikes-floor.png',
     voidFx: 'assets/map/void-fx.png'
   };
@@ -268,7 +269,16 @@
   }
 
   function renderArenaBackdrop(svg){
-    addSvg(svg, 'g', { class:'arena-backdrop-layer' });
+    const layer = addSvg(svg, 'g', { class:'arena-backdrop-layer' });
+    addSvg(layer, 'image', {
+      href: MAP_ASSETS.arenaBackdrop,
+      x: 105,
+      y: 40,
+      width: 1620,
+      height: 1500,
+      class: 'arena-image-backdrop',
+      preserveAspectRatio: 'xMidYMid slice'
+    });
   }
 
   function rollDetail(notation){
@@ -1238,7 +1248,6 @@ async function applyRewardList(player, rewards, labelPrefix){
       if(!(handItem.origin === '职业技能' && extraClassUses > 0)) return false;
     }
     if(bucket==='weapon_or_accessory' && p.turn.weaponOrAccessoryUsed) return false;
-    if(p.professionKey==='mage' && p.turn.movedDistance>3 && handItem.origin==='职业技能') return false;
     return true;
   }
 
@@ -1349,7 +1358,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const handItem = p.hand[index];
     const cardDef = getCardDef(handItem.cardKey);
     if(!cardDef) return;
-    if(!cardCanBePlayed(p, handItem, cardDef)) { setHint('当前行动桶已用尽，或法师移动限制生效。'); return; }
+    if(!cardCanBePlayed(p, handItem, cardDef)) { setHint('当前行动桶已用尽。'); return; }
     state.selectedCardIndex = index;
     if(cardDef.template==='dual_mode'){
       state.dualModeCard = { index, handItem, cardDef };
@@ -2013,6 +2022,24 @@ async function applyRewardList(player, rewards, labelPrefix){
         <div class="card-text">${def.text || ''}</div>`;
       b.onclick = ()=>playCardFromHand(idx);
       hand.appendChild(b);
+    });
+    fitHandCardText();
+  }
+
+  function fitHandCardText(){
+    requestAnimationFrame(() => {
+      document.querySelectorAll('#hand .card').forEach(card => {
+        const text = card.querySelector('.card-text');
+        if(!text) return;
+        text.style.fontSize = '';
+        text.style.lineHeight = '';
+        let size = Number.parseFloat(getComputedStyle(text).fontSize) || 14;
+        while(text.scrollHeight > text.clientHeight && size > 11){
+          size -= 0.5;
+          text.style.fontSize = `${size}px`;
+          text.style.lineHeight = '1.28';
+        }
+      });
     });
   }
 

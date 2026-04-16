@@ -83,7 +83,7 @@ window.DEFAULT_STUDIO_DATA = {
     mage: {
       key: "mage", name: "法师", hp: 45, move: 3, movePreset: "ranged",
       passives: {
-        mage_passive: { name: "法师被动", template: "movement_threshold_restricts_bucket", config: { threshold: 3, affectedBuckets: ["class_or_guardian"], timing: "after_move_before_class_skill", exceptionBuckets: ["weapon_or_accessory"] } }
+        mage_passive: { name: "狂野施法", template: "threshold_reward_once_per_turn", config: { thresholdType: "dealt_damage", thresholdValue: 9, rewardList: [{ type: "draw_cards", value: 1 }], oncePerTurn: true } }
       },
       cards: {
         mage_fireball: { name: "火球", source: "职业技能", template: "direct_damage", config: { damage: "1d8", range: 5, target: "enemy", spell: true, apply: { burn: 2 } }, text: "1D8 伤害并点燃。" },
