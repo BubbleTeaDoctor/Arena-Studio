@@ -9,19 +9,17 @@
   const BOARD_VIEW = { width: 2100, height: 1750 };
   const MAP_ASSETS = {
     arenaBackdrop: 'assets/map/octopath-arena-backdrop.png',
-    golemIdle: 'assets/map/mecha-stone-golem-idle.png',
-    golemAttack: 'assets/map/mecha-stone-golem-attack.png',
+    golemIdle: 'assets/map/golem/idle-0.png',
     spikeFloor: 'assets/map/trap-spikes-floor.png',
     voidFx: 'assets/map/void-fx.png'
   };
+  const GOLEM_ATTACK_FRAMES = Array.from({ length: 9 }, (_, i) => `assets/map/golem/attack-${i}.png`);
   const GOLEM_SPRITE = {
     frameWidth: 100,
     frameHeight: 100,
-    sheetWidth: 1000,
-    sheetHeight: 1000,
     scale: 1.08,
-    idle: { file: MAP_ASSETS.golemIdle, sheetWidth: 400, sheetHeight: 100, row: 0, frames: 4, duration: 980, loop: true },
-    attack: { file: MAP_ASSETS.golemAttack, sheetWidth: 1000, sheetHeight: 100, row: 0, frames: 10, duration: 760, loop: false }
+    idle: { files: [MAP_ASSETS.golemIdle], duration: 980, loop: true },
+    attack: { files: GOLEM_ATTACK_FRAMES, duration: 760, loop: false }
   };
   const SPRITE_PROFILES = {
     'knight-blue': {
@@ -171,6 +169,7 @@
     traps: new Map(),
     mapTokens: new Map(),
     mapHazardAnims: new Map(),
+    mapHazardTimers: new Map(),
     current: 0,
     pending: null,
     selectedCardIndex: null,
@@ -619,14 +618,23 @@
     const source = spikeSourceForDangerTile(tile);
     if(!source) return;
     const k = key(source);
-    state.mapHazardAnims.set(k, 'attack');
+    const oldTimers = state.mapHazardTimers.get(k);
+    if(oldTimers){
+      clearInterval(oldTimers.interval);
+      clearTimeout(oldTimers.timeout);
+    }
+    state.mapHazardAnims.set(k, { name: 'attack', startedAt: performance.now() });
     if(state.board?.length && $('board')) renderBoard();
-    setTimeout(() => {
-      if(state.mapHazardAnims.get(k) === 'attack'){
-        state.mapHazardAnims.delete(k);
-        if(state.board?.length && $('board')) renderBoard();
-      }
+    const interval = setInterval(() => {
+      if(state.mapHazardAnims.get(k)?.name === 'attack' && state.board?.length && $('board')) renderBoard();
+    }, 80);
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      state.mapHazardAnims.delete(k);
+      state.mapHazardTimers.delete(k);
+      if(state.board?.length && $('board')) renderBoard();
     }, GOLEM_SPRITE.attack.duration);
+    state.mapHazardTimers.set(k, { interval, timeout });
   }
 
   function getMapToken(tile){
@@ -1170,7 +1178,12 @@ async function applyRewardList(player, rewards, labelPrefix){
     state.boardMap = new Map(state.board.map(t=>[key(t),t]));
     state.traps = new Map();
     state.mapTokens = new Map();
+    state.mapHazardTimers.forEach(timers => {
+      clearInterval(timers.interval);
+      clearTimeout(timers.timeout);
+    });
     state.mapHazardAnims = new Map();
+    state.mapHazardTimers = new Map();
     state.current = 0;
     state.pending = null;
     state.selectedCardIndex = null;
@@ -1781,20 +1794,21 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function renderSpikeTowerComponent(layer, tile){
     const {x,y} = hexToPixel(tile);
-    const animName = state.mapHazardAnims.get(key(tile)) || 'idle';
+    const animState = state.mapHazardAnims.get(key(tile));
+    const animName = animState?.name || 'idle';
     const anim = GOLEM_SPRITE[animName] || GOLEM_SPRITE.idle;
+    const frameMs = Number(anim.duration || 600) / Math.max(1, anim.files.length);
+    const elapsed = animState?.startedAt ? Math.max(0, performance.now() - animState.startedAt) : 0;
+    const frameIndex = animName === 'attack' ? Math.min(anim.files.length - 1, Math.floor(elapsed / frameMs)) : 0;
     const displayW = GOLEM_SPRITE.frameWidth * GOLEM_SPRITE.scale;
     const displayH = GOLEM_SPRITE.frameHeight * GOLEM_SPRITE.scale;
     const g = addSvg(layer, 'g', { class:`map-component spike-tower-component golem-component golem-${animName}`, transform:`translate(${x} ${y})` });
     addSvg(g, 'ellipse', { cx:0, cy:19, rx:42, ry:13, class:'map-component-shadow golem-shadow' });
     appendNativeSprite(g, {
-      file: anim.file,
+      file: anim.files[frameIndex] || anim.files[0],
       frameWidth: GOLEM_SPRITE.frameWidth,
       frameHeight: GOLEM_SPRITE.frameHeight,
-      sheetWidth: anim.sheetWidth || GOLEM_SPRITE.sheetWidth,
-      sheetHeight: anim.sheetHeight || GOLEM_SPRITE.sheetHeight,
-      frames: anim.frames,
-      row: anim.row,
+      frames: 1,
       scale: GOLEM_SPRITE.scale,
       duration: anim.duration,
       loop: !!anim.loop,
