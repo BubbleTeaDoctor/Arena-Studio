@@ -218,7 +218,7 @@ body.game-theme{
   grid-template-columns:minmax(210px,280px) minmax(0,1fr) minmax(230px,320px);
   grid-template-areas:
     "left board right"
-    "left board log";
+    ". board log";
   grid-template-rows:auto 1fr;
   gap:10px;
   align-items:start;
@@ -228,9 +228,9 @@ body.game-theme{
 .game-theme .top-row{display:contents;max-width:none}
 .game-theme #player-info{grid-area:left}
 .game-theme #player-info-rival{grid-area:right}
+.game-theme #board-panel{grid-area:board}
 .game-theme #battle-log-panel{grid-area:log;min-height:260px}
-.game-theme .player-side-panel,.game-theme #battle-log-panel{position:sticky;top:8px}
-.game-theme #battle-log-panel{top:190px}
+.game-theme .player-side-panel,.game-theme #battle-log-panel{align-self:start}
 .game-theme #hand-panel{
   position:fixed;
   left:18px;
@@ -311,7 +311,13 @@ body.game-theme{
 }
 .game-theme .player-box.active{outline:2px solid var(--accent);box-shadow:0 0 0 3px rgba(215,166,95,.13)}
 .game-theme .log-entry{border-radius:8px;border-left-color:var(--accent);background:rgba(255,255,255,.035)}
-.game-theme .hp-bar,.game-theme .block-bar{border-radius:3px;height:12px;background:#0b0e0a;border:1px solid rgba(255,255,255,.08)}
+.game-theme .hp-bar,.game-theme .block-bar{border-radius:3px;height:14px;background:#0b0e0a;border:1px solid rgba(255,255,255,.08)}
+.game-theme .hp-bar{
+  background-image:linear-gradient(90deg,rgba(10,5,5,.68),rgba(10,5,5,.28)),url("assets/ui/dragon-hpbar.png");
+  background-size:auto,auto 100%;
+  background-position:left center;
+  image-rendering:pixelated;
+}
 .game-theme .hp-fill{background:linear-gradient(90deg,#b93f45,#e8aa57)}
 .game-theme .block-fill{background:linear-gradient(90deg,#4f8da4,#c8e0dc)}
 .game-theme .status-chip{border-radius:5px;border:1px solid rgba(239,196,110,.16)}
@@ -394,7 +400,7 @@ body.game-theme{
 
 .pixel-unit{transform-box:fill-box;transform-origin:center bottom;shape-rendering:crispEdges}
 .sprite-unit{pointer-events:none;shape-rendering:crispEdges}
-.sprite-frame-svg{overflow:hidden}
+.sprite-frame-svg{overflow:hidden !important}
 .sprite-sheet-image{image-rendering:pixelated}
 .sprite-viewport{overflow:hidden}
 .sprite-sheet-strip{background-repeat:no-repeat;background-position:0 0;image-rendering:pixelated}

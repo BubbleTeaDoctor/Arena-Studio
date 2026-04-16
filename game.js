@@ -9,7 +9,8 @@
   const BOARD_VIEW = { width: 2100, height: 1750 };
   const MAP_ASSETS = {
     arenaBackdrop: 'assets/map/octopath-arena-backdrop.png',
-    golemSheet: 'assets/map/mecha-stone-golem-sheet.png',
+    golemIdle: 'assets/map/mecha-stone-golem-idle.png',
+    golemAttack: 'assets/map/mecha-stone-golem-attack.png',
     spikeFloor: 'assets/map/trap-spikes-floor.png',
     voidFx: 'assets/map/void-fx.png'
   };
@@ -19,8 +20,8 @@
     sheetWidth: 1000,
     sheetHeight: 1000,
     scale: 1.08,
-    idle: { row: 0, frames: 4, duration: 980, loop: true },
-    attack: { row: 2, frames: 10, duration: 760, loop: false }
+    idle: { file: MAP_ASSETS.golemIdle, sheetWidth: 400, sheetHeight: 100, row: 0, frames: 4, duration: 980, loop: true },
+    attack: { file: MAP_ASSETS.golemAttack, sheetWidth: 1000, sheetHeight: 100, row: 0, frames: 10, duration: 760, loop: false }
   };
   const SPRITE_PROFILES = {
     'knight-blue': {
@@ -1787,11 +1788,11 @@ async function applyRewardList(player, rewards, labelPrefix){
     const g = addSvg(layer, 'g', { class:`map-component spike-tower-component golem-component golem-${animName}`, transform:`translate(${x} ${y})` });
     addSvg(g, 'ellipse', { cx:0, cy:19, rx:42, ry:13, class:'map-component-shadow golem-shadow' });
     appendNativeSprite(g, {
-      file: MAP_ASSETS.golemSheet,
+      file: anim.file,
       frameWidth: GOLEM_SPRITE.frameWidth,
       frameHeight: GOLEM_SPRITE.frameHeight,
-      sheetWidth: GOLEM_SPRITE.sheetWidth,
-      sheetHeight: GOLEM_SPRITE.sheetHeight,
+      sheetWidth: anim.sheetWidth || GOLEM_SPRITE.sheetWidth,
+      sheetHeight: anim.sheetHeight || GOLEM_SPRITE.sheetHeight,
       frames: anim.frames,
       row: anim.row,
       scale: GOLEM_SPRITE.scale,
@@ -1826,7 +1827,7 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function renderBoardComponents(svg, blackHoleOn){
     const layer = addSvg(svg, 'g', { class:'map-component-layer' });
-    state.board.filter(t => t.type === 'spike').forEach(t => renderSpikeTowerComponent(layer, t));
+    state.board.filter(t => t.type === 'spike' && SPIKE_TILE_KEYS.has(key(t))).forEach(t => renderSpikeTowerComponent(layer, t));
     const center = state.boardMap.get('0,0');
     if(blackHoleOn && center) renderBlackHoleComponent(layer, center);
   }
@@ -1946,6 +1947,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       height: frameH * scale,
       viewBox: `0 0 ${frameW} ${frameH}`,
       class: opts.className || 'sprite-frame-svg',
+      overflow: 'hidden',
       preserveAspectRatio: 'none'
     });
     viewport.style.overflow = 'hidden';
