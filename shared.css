@@ -192,12 +192,21 @@ body.game-theme{
 .game-theme .tile text{font-size:13px;font-weight:800;fill:#f9edc5;paint-order:stroke;stroke:#080a08;stroke-width:4px}
 .map-component-layer,.map-component{pointer-events:none}
 .map-component-shadow{fill:rgba(0,0,0,.42)}
-.spike-floor-sprite,.black-hole-fx{image-rendering:pixelated}
+.spike-floor-sprite,.black-hole-fx,.center-trap-image,.magic-trap-image,.arrow-trap-image,.mark-fx-image,.summon-sprite-image,.arrow-projectile{image-rendering:pixelated}
 .spike-floor-sprite{filter:drop-shadow(0 4px 0 rgba(0,0,0,.35)) drop-shadow(0 0 7px rgba(255,86,86,.32))}
 .obelisk-sprite-frame{overflow:hidden;filter:drop-shadow(0 6px 0 rgba(0,0,0,.42)) drop-shadow(0 0 10px rgba(0,235,255,.24))}
 .obelisk-shadow{fill:rgba(0,0,0,.5)}
-.hazard-fx-layer,.lightning-strike-component{pointer-events:none}
+.hazard-fx-layer,.lightning-strike-component,.arrow-projectile-component,.summon-unit{pointer-events:none}
 .lightning-fx-frame{overflow:hidden;filter:drop-shadow(0 0 8px rgba(255,92,72,.82)) drop-shadow(0 0 14px rgba(255,190,72,.42))}
+.center-trap-frame{overflow:hidden;filter:drop-shadow(0 8px 0 rgba(0,0,0,.46)) drop-shadow(0 0 14px rgba(255,75,26,.74))}
+.center-trap-shadow{fill:rgba(0,0,0,.52)}
+.magic-trap-frame{overflow:hidden;filter:drop-shadow(0 4px 0 rgba(0,0,0,.38)) drop-shadow(0 0 10px rgba(136,88,255,.62))}
+.arrow-trap-frame{overflow:hidden;filter:drop-shadow(0 4px 0 rgba(0,0,0,.38)) drop-shadow(0 0 8px rgba(239,196,110,.4))}
+.arrow-projectile{filter:drop-shadow(0 0 5px rgba(255,238,178,.75))}
+.mark-fx-frame{overflow:hidden;filter:drop-shadow(0 0 8px rgba(255,51,51,.85))}
+.summon-sprite-frame{overflow:hidden;filter:drop-shadow(0 4px 0 rgba(0,0,0,.42))}
+.summon-shadow{fill:rgba(0,0,0,.45)}
+.summon-label{font-size:11px;font-weight:800;fill:#e9dec6;paint-order:stroke;stroke:#080a08;stroke-width:4px}
 .black-hole-rim{fill:#5c4565;stroke:#d4a7ff;stroke-width:3;opacity:.88}
 .black-hole-core{fill:#070509;stroke:#111;stroke-width:2}
 .black-hole-fx{opacity:.9;filter:drop-shadow(0 0 9px rgba(172,84,255,.62))}
