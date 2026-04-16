@@ -3,13 +3,24 @@
   const $ = id => document.getElementById(id);
   const deep = o => JSON.parse(JSON.stringify(o));
   const svgNS = 'http://www.w3.org/2000/svg';
+  const xlinkNS = 'http://www.w3.org/1999/xlink';
   const NO_ACCESSORY = '__none__';
   const DEFAULT_MATCH_OPTIONS = { blackHoleEnabled: true, drawOpening: 6, drawPerTurn: 2 };
   const BOARD_VIEW = { width: 2100, height: 1750 };
   const MAP_ASSETS = {
     arenaBackdrop: 'assets/map/octopath-arena-backdrop.png',
+    golemSheet: 'assets/map/mecha-stone-golem-sheet.png',
     spikeFloor: 'assets/map/trap-spikes-floor.png',
     voidFx: 'assets/map/void-fx.png'
+  };
+  const GOLEM_SPRITE = {
+    frameWidth: 100,
+    frameHeight: 100,
+    sheetWidth: 1000,
+    sheetHeight: 1000,
+    scale: 1.08,
+    idle: { row: 0, frames: 4, duration: 980, loop: true },
+    attack: { row: 2, frames: 10, duration: 760, loop: false }
   };
   const SPRITE_PROFILES = {
     'knight-blue': {
@@ -158,12 +169,15 @@
     boardMap: new Map(),
     traps: new Map(),
     mapTokens: new Map(),
+    mapHazardAnims: new Map(),
     current: 0,
     pending: null,
     selectedCardIndex: null,
     winner: null,
     dualModeCard: null,
     matchOptions: { ...DEFAULT_MATCH_OPTIONS },
+    customArenaBackdropUrl: null,
+    customArenaBackdropName: '',
     boardZoom: 0.7,
     boardZoomAuto: true,
     battleLog: [],
@@ -209,7 +223,10 @@
   function addSvg(parent, tag, attrs = {}){
     const el = document.createElementNS(svgNS, tag);
     Object.entries(attrs).forEach(([name, value]) => {
-      if(value !== null && value !== undefined) el.setAttribute(name, value);
+      if(value !== null && value !== undefined){
+        el.setAttribute(name, value);
+        if(name === 'href') el.setAttributeNS(xlinkNS, 'href', value);
+      }
     });
     parent.appendChild(el);
     return el;
@@ -276,11 +293,11 @@
   function renderArenaBackdrop(svg){
     const layer = addSvg(svg, 'g', { class:'arena-backdrop-layer' });
     addSvg(layer, 'image', {
-      href: MAP_ASSETS.arenaBackdrop,
-      x: 105,
-      y: 40,
-      width: 1620,
-      height: 1500,
+      href: state.customArenaBackdropUrl || MAP_ASSETS.arenaBackdrop,
+      x: 0,
+      y: 0,
+      width: BOARD_VIEW.width,
+      height: BOARD_VIEW.height,
       class: 'arena-image-backdrop',
       preserveAspectRatio: 'xMidYMid slice'
     });
@@ -589,6 +606,26 @@
   function isSpikeDangerTile(tile){
     const t = state.boardMap.get(key(tile));
     return !!(t && (t.type === 'spike' || hasAdjacentSpike(tile)));
+  }
+
+  function spikeSourceForDangerTile(tile){
+    const t = state.boardMap.get(key(tile));
+    if(t?.type === 'spike') return tile;
+    return neighbors(tile).find(c => state.boardMap.get(key(c))?.type === 'spike') || null;
+  }
+
+  function triggerSpikeGolemAttack(tile){
+    const source = spikeSourceForDangerTile(tile);
+    if(!source) return;
+    const k = key(source);
+    state.mapHazardAnims.set(k, 'attack');
+    if(state.board?.length && $('board')) renderBoard();
+    setTimeout(() => {
+      if(state.mapHazardAnims.get(k) === 'attack'){
+        state.mapHazardAnims.delete(k);
+        if(state.board?.length && $('board')) renderBoard();
+      }
+    }, GOLEM_SPRITE.attack.duration);
   }
 
   function getMapToken(tile){
@@ -1132,6 +1169,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     state.boardMap = new Map(state.board.map(t=>[key(t),t]));
     state.traps = new Map();
     state.mapTokens = new Map();
+    state.mapHazardAnims = new Map();
     state.current = 0;
     state.pending = null;
     state.selectedCardIndex = null;
@@ -1200,7 +1238,7 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function enterTile(player){
     const t = state.boardMap.get(key(player.pos)); if(!t) return;
-    if(isSpikeDangerTile(player.pos)){ const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 触碰尖刺柱危险区域，受到 ${dmg} 伤害。`); }
+    if(isSpikeDangerTile(player.pos)){ triggerSpikeGolemAttack(player.pos); const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 触碰守卫石像危险区域，受到 ${dmg} 伤害。`); }
     if(isTokenDangerTile(player.pos)){ const tok = getMapToken(player.pos) || neighbors(player.pos).map(getMapToken).find(Boolean); const expr = tok?.damage || '2d8'; const dmg = loggedRoll(`${player.label} ${tok?.name || '危险区'}伤害`, resolvePlayerNotation(player, expr)); takePureDamage(player, dmg); log(`${player.label} 触碰 ${tok?.name || '危险区'}，受到 ${dmg} 伤害。`); }
     if(isBlackHoleEnabled() && t.type==='center'){ const dmg = loggedRoll(`${player.label} 黑洞中心伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 被黑洞中心撕扯，受到 ${dmg} 伤害。`); }
     const trap = state.traps.get(key(player.pos));
@@ -1689,6 +1727,14 @@ async function applyRewardList(player, rewards, labelPrefix){
       </div>`;
     }).join('')}</div>`;
     $('turn-indicator').textContent = state.winner ? '对局结束' : `轮到 ${active.label}`;
+    const rivalHost = $('player-info-rival');
+    if(rivalHost){
+      const infoHost = $('player-info');
+      const boxes = Array.from(infoHost.querySelectorAll('.player-box'));
+      const title = `<h2>${I18N().t('role_status','角色状态')}</h2>`;
+      if(boxes[0]) infoHost.innerHTML = `${title}<div class="info-grid">${boxes[0].outerHTML}</div>`;
+      if(boxes[1]) rivalHost.innerHTML = `${title}<div class="info-grid">${boxes[1].outerHTML}</div>`;
+    }
     const activeDeck = $('active-deck-count');
     if(activeDeck) activeDeck.textContent = active ? `${I18N().t('deck_remaining','牌库剩余')} ${active.deck.length}` : `${I18N().t('deck_remaining','牌库剩余')} 0`;
   }
@@ -1725,25 +1771,36 @@ async function applyRewardList(player, rewards, labelPrefix){
   }
 
   function tileMaterialOpacity(tile, centerActive, isSpikeTile, inDanger){
-    if(centerActive) return '0.28';
-    if(isSpikeTile) return '0.2';
-    if(inDanger) return '0.16';
-    if(tile.type === 'start') return '0.14';
-    return '0.055';
+    if(centerActive) return '0.52';
+    if(isSpikeTile) return '0.44';
+    if(inDanger) return '0.32';
+    if(tile.type === 'start') return '0.38';
+    return '0.24';
   }
 
   function renderSpikeTowerComponent(layer, tile){
     const {x,y} = hexToPixel(tile);
-    const g = addSvg(layer, 'g', { class:'map-component spike-tower-component', transform:`translate(${x} ${y})` });
-    addSvg(g, 'ellipse', { cx:0, cy:13, rx:38, ry:13, class:'map-component-shadow' });
-    addSvg(g, 'image', {
-      href: MAP_ASSETS.spikeFloor,
-      x: -46,
-      y: -17,
-      width: 92,
-      height: 26,
-      class: 'spike-floor-sprite',
-      preserveAspectRatio: 'xMidYMid meet'
+    const animName = state.mapHazardAnims.get(key(tile)) || 'idle';
+    const anim = GOLEM_SPRITE[animName] || GOLEM_SPRITE.idle;
+    const displayW = GOLEM_SPRITE.frameWidth * GOLEM_SPRITE.scale;
+    const displayH = GOLEM_SPRITE.frameHeight * GOLEM_SPRITE.scale;
+    const g = addSvg(layer, 'g', { class:`map-component spike-tower-component golem-component golem-${animName}`, transform:`translate(${x} ${y})` });
+    addSvg(g, 'ellipse', { cx:0, cy:19, rx:42, ry:13, class:'map-component-shadow golem-shadow' });
+    appendNativeSprite(g, {
+      file: MAP_ASSETS.golemSheet,
+      frameWidth: GOLEM_SPRITE.frameWidth,
+      frameHeight: GOLEM_SPRITE.frameHeight,
+      sheetWidth: GOLEM_SPRITE.sheetWidth,
+      sheetHeight: GOLEM_SPRITE.sheetHeight,
+      frames: anim.frames,
+      row: anim.row,
+      scale: GOLEM_SPRITE.scale,
+      duration: anim.duration,
+      loop: !!anim.loop,
+      x: -displayW / 2,
+      y: -displayH + 26,
+      className: 'sprite-frame-svg golem-sprite-frame',
+      imageClass: 'sprite-sheet-image golem-sprite-image'
     });
     return g;
   }
@@ -1872,6 +1929,55 @@ async function applyRewardList(player, rewards, labelPrefix){
     return el;
   }
 
+  function appendNativeSprite(parent, opts){
+    const frameW = Number(opts.frameWidth || 1);
+    const frameH = Number(opts.frameHeight || 1);
+    const scale = Number(opts.scale || 1);
+    const frames = Math.max(1, Number(opts.frames || 1));
+    const sheetW = Number(opts.sheetWidth || frameW * frames);
+    const sheetH = Number(opts.sheetHeight || frameH);
+    const row = Math.max(0, Number(opts.row || 0));
+    const duration = Number(opts.duration || 600);
+    const viewport = document.createElementNS(svgNS, 'svg');
+    setSvgAttrs(viewport, {
+      x: opts.x || 0,
+      y: opts.y || 0,
+      width: frameW * scale,
+      height: frameH * scale,
+      viewBox: `0 0 ${frameW} ${frameH}`,
+      class: opts.className || 'sprite-frame-svg',
+      preserveAspectRatio: 'none'
+    });
+    viewport.style.overflow = 'hidden';
+    const img = document.createElementNS(svgNS, 'image');
+    setSvgAttrs(img, {
+      href: opts.file,
+      x: 0,
+      y: -row * frameH,
+      width: sheetW,
+      height: sheetH,
+      class: opts.imageClass || 'sprite-sheet-image',
+      preserveAspectRatio: 'none'
+    });
+    img.setAttributeNS(xlinkNS, 'href', opts.file);
+    if(frames > 1){
+      const values = Array.from({ length: frames }, (_, i) => String(-i * frameW)).join(';');
+      const anim = document.createElementNS(svgNS, 'animate');
+      setSvgAttrs(anim, {
+        attributeName: 'x',
+        values,
+        dur: `${duration}ms`,
+        calcMode: 'discrete',
+        repeatCount: opts.loop ? 'indefinite' : '1',
+        fill: opts.loop ? 'remove' : 'freeze'
+      });
+      img.appendChild(anim);
+    }
+    viewport.appendChild(img);
+    parent.appendChild(viewport);
+    return viewport;
+  }
+
   function appendUnitLabels(g, p, x, nameY, hpY){
     const name = document.createElementNS(svgNS, 'text');
     setSvgAttrs(name, { x, y: nameY, 'text-anchor': 'middle', class: 'unit-nameplate' });
@@ -1896,10 +2002,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const displayW = frameW * scale;
     const displayH = frameH * scale;
     const frameCount = Math.max(1, Number(anim.frames || 1));
-    const steps = Math.max(1, frameCount - 1);
-    const shift = frameW * Math.max(0, frameCount - 1);
     const duration = Number(anim.duration || 600);
-    const loop = anim.loop ? 'infinite' : '1';
     const footOffset = Number(profile.footOffset ?? (profile.frameHeight === 96 ? 18 : 20));
 
     const g = document.createElementNS(svgNS, 'g');
@@ -1917,20 +2020,19 @@ async function applyRewardList(player, rewards, labelPrefix){
     body.setAttribute('class', 'sprite-body');
     body.setAttribute('transform', p.id === 2 ? `translate(${x} ${y}) scale(-1 1)` : `translate(${x} ${y})`);
 
-    const fo = document.createElementNS(svgNS, 'foreignObject');
-    setSvgAttrs(fo, { x: -displayW / 2, y: -displayH + footOffset, width: displayW, height: displayH, class: 'sprite-viewport' });
-    const strip = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
-    strip.className = 'sprite-sheet-strip';
-    strip.style.width = `${frameW}px`;
-    strip.style.height = `${frameH}px`;
-    strip.style.backgroundImage = `url("${anim.file}")`;
-    strip.style.backgroundSize = `${frameW * frameCount}px ${frameH}px`;
-    strip.style.transform = `scale(${scale})`;
-    strip.style.transformOrigin = 'top left';
-    strip.style.setProperty('--sprite-shift', `${shift}px`);
-    if(frameCount > 1) strip.style.animation = `sprite-strip ${duration}ms steps(${steps}, end) ${loop} forwards`;
-    fo.appendChild(strip);
-    body.appendChild(fo);
+    appendNativeSprite(body, {
+      file: anim.file,
+      frameWidth: frameW,
+      frameHeight: frameH,
+      frames: frameCount,
+      scale,
+      duration,
+      loop: !!anim.loop,
+      x: -displayW / 2,
+      y: -displayH + footOffset,
+      className: 'sprite-frame-svg unit-sprite-frame',
+      imageClass: 'sprite-sheet-image unit-sprite-image'
+    });
     g.appendChild(body);
 
     if(animName === 'cast'){
@@ -2254,6 +2356,34 @@ async function applyRewardList(player, rewards, labelPrefix){
     });
   }
 
+  function setArenaBackgroundFile(file){
+    if(!file || !file.type?.startsWith('image/')) return;
+    if(state.customArenaBackdropUrl) URL.revokeObjectURL(state.customArenaBackdropUrl);
+    state.customArenaBackdropUrl = URL.createObjectURL(file);
+    state.customArenaBackdropName = file.name || '';
+    const label = $('arena-bg-name');
+    if(label) label.textContent = state.customArenaBackdropName || '本地背景';
+    if(state.board?.length && $('board')) renderBoard();
+  }
+
+  function resetArenaBackground(){
+    if(state.customArenaBackdropUrl) URL.revokeObjectURL(state.customArenaBackdropUrl);
+    state.customArenaBackdropUrl = null;
+    state.customArenaBackdropName = '';
+    const input = $('arena-bg-input');
+    if(input) input.value = '';
+    const label = $('arena-bg-name');
+    if(label) label.textContent = '默认背景';
+    if(state.board?.length && $('board')) renderBoard();
+  }
+
+  function bindArenaBackgroundControls(){
+    const input = $('arena-bg-input');
+    const clear = $('arena-bg-clear');
+    if(input) input.onchange = () => setArenaBackgroundFile(input.files?.[0]);
+    if(clear) clear.onclick = resetArenaBackground;
+  }
+
   function fillSetupSelect(id, obj, kind, includeNone = false){
     const sel=$(id);
     sel.innerHTML='';
@@ -2311,6 +2441,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     if ($('btn-export-debug-log')) $('btn-export-debug-log').onclick = exportDebugBundle;
     $('ruleset-select').onchange = () => populateSetup($('ruleset-select').value);
     bindBoardZoomControls();
+    bindArenaBackgroundControls();
     bindDeckTooltips();
   }
   (async()=>{

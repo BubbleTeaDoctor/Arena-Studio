@@ -31,8 +31,9 @@
   </section>
   <section id="game-screen" class="hidden">
     <div class="top-row">
-      <section class="panel" id="player-info"></section>
-      <section class="panel">
+      <section class="panel player-side-panel" id="player-info"></section>
+      <section class="panel player-side-panel" id="player-info-rival"></section>
+      <section class="panel" id="battle-log-panel">
         <div class="panel-head"><h2 data-i18n="battle_log">战斗日志</h2><div id="mode-indicator" class="badge" data-i18n="current_mode">当前模式：待机</div></div>
         <div id="log" class="log"></div>
       </section>
@@ -48,6 +49,9 @@
         <button id="btn-export-battle-log" class="secondary">导出战斗日志</button>
         <button id="btn-export-debug-log" class="secondary">导出运行诊断</button>
         <button class="secondary" onclick="location.href='index.html'" data-i18n="back_home">返回首页</button>
+        <label class="bg-picker-control"><span>替换背景</span><input id="arena-bg-input" type="file" accept="image/*" /></label>
+        <button id="arena-bg-clear" class="secondary" type="button">默认背景</button>
+        <span id="arena-bg-name" class="badge arena-bg-name">默认背景</span>
         <span class="toolbar-spacer"></span>
         <div class="board-zoom-controls" aria-label="棋盘缩放">
           <button id="board-zoom-out" class="secondary" type="button">-</button>
