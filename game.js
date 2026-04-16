@@ -7,9 +7,6 @@
   const DEFAULT_MATCH_OPTIONS = { blackHoleEnabled: true, drawOpening: 6, drawPerTurn: 2 };
   const BOARD_VIEW = { width: 2100, height: 1750 };
   const MAP_ASSETS = {
-    stoneGround: 'assets/map/stone-ground.png',
-    grassGround: 'assets/map/grass-ground.png',
-    tombTiles: 'assets/map/lost-tomb-tiles.png',
     spikeFloor: 'assets/map/trap-spikes-floor.png',
     voidFx: 'assets/map/void-fx.png'
   };
@@ -54,7 +51,7 @@
       }
     },
     'severed-fang': {
-      frameWidth: 128, frameHeight: 128, scale: 1.08,
+      frameWidth: 128, frameHeight: 128, scale: 1.18, footOffset: 42,
       animations: {
         idle: { file: 'assets/sprites/severed-fang/idle.png', frames: 6, duration: 950, loop: true },
         run: { file: 'assets/sprites/severed-fang/run.png', frames: 8, duration: 760, loop: true },
@@ -67,7 +64,7 @@
       }
     },
     'evil-wizard': {
-      frameWidth: 140, frameHeight: 140, scale: 1.0,
+      frameWidth: 140, frameHeight: 140, scale: 1.1, footOffset: 44,
       animations: {
         idle: { file: 'assets/sprites/evil-wizard/idle.png', frames: 10, duration: 1050, loop: true },
         run: { file: 'assets/sprites/evil-wizard/run.png', frames: 8, duration: 760, loop: true },
@@ -80,7 +77,7 @@
       }
     },
     'blind-huntress': {
-      frameWidth: 120, frameHeight: 128, scale: 1.06,
+      frameWidth: 120, frameHeight: 128, scale: 1.18, footOffset: 42,
       animations: {
         idle: { file: 'assets/sprites/blind-huntress/idle.png', frames: 24, duration: 1150, loop: true },
         run: { file: 'assets/sprites/blind-huntress/run.png', frames: 16, duration: 760, loop: true },
@@ -93,7 +90,7 @@
       }
     },
     'duskborne-elf': {
-      frameWidth: 160, frameHeight: 144, scale: 0.98,
+      frameWidth: 160, frameHeight: 144, scale: 1.12, footOffset: 48,
       animations: {
         idle: { file: 'assets/sprites/duskborne-elf/idle.png', frames: 6, duration: 1050, loop: true },
         run: { file: 'assets/sprites/duskborne-elf/run.png', frames: 8, duration: 760, loop: true },
@@ -106,7 +103,7 @@
       }
     },
     'duskborne-demonkin': {
-      frameWidth: 128, frameHeight: 128, scale: 1.08,
+      frameWidth: 128, frameHeight: 128, scale: 1.16, footOffset: 42,
       animations: {
         idle: { file: 'assets/sprites/duskborne-demonkin/idle.png', frames: 6, duration: 1000, loop: true },
         run: { file: 'assets/sprites/duskborne-demonkin/run.png', frames: 8, duration: 760, loop: true },
@@ -119,7 +116,7 @@
       }
     },
     'battle-maid': {
-      frameWidth: 128, frameHeight: 128, scale: 1.05,
+      frameWidth: 128, frameHeight: 128, scale: 1.16, footOffset: 44,
       animations: {
         idle: { file: 'assets/sprites/battle-maid/idle.png', frames: 12, duration: 1050, loop: true },
         run: { file: 'assets/sprites/battle-maid/run.png', frames: 18, duration: 780, loop: true },
@@ -212,25 +209,6 @@
     return el;
   }
 
-  function addImagePattern(defs, id, href, size, opacity = 1){
-    const pattern = addSvg(defs, 'pattern', {
-      id,
-      patternUnits: 'userSpaceOnUse',
-      width: size,
-      height: size
-    });
-    addSvg(pattern, 'image', {
-      href,
-      x: 0,
-      y: 0,
-      width: size,
-      height: size,
-      opacity,
-      preserveAspectRatio: 'xMidYMid slice'
-    });
-    return pattern;
-  }
-
   function addArenaSpeckles(layer, clipId){
     const colors = ['#8a6b4e', '#40362c', '#6b513d', '#9a7851'];
     for(let i=0;i<96;i++){
@@ -290,27 +268,7 @@
   }
 
   function renderArenaBackdrop(svg){
-    const defs = addSvg(svg, 'defs');
-    const floorGrad = addSvg(defs, 'radialGradient', { id:'arena-floor-grad', cx:'50%', cy:'48%', r:'58%' });
-    addSvg(floorGrad, 'stop', { offset:'0%', 'stop-color':'#5f5743' });
-    addSvg(floorGrad, 'stop', { offset:'68%', 'stop-color':'#413b31' });
-    addSvg(floorGrad, 'stop', { offset:'100%', 'stop-color':'#171a15' });
-    addImagePattern(defs, 'arena-stone-pattern', MAP_ASSETS.stoneGround, 192, 0.72);
-    addImagePattern(defs, 'tile-stone-pattern', MAP_ASSETS.stoneGround, 120, 0.92);
-    addImagePattern(defs, 'tile-grass-pattern', MAP_ASSETS.grassGround, 112, 0.9);
-    addImagePattern(defs, 'tile-tomb-pattern', MAP_ASSETS.tombTiles, 144, 0.86);
-    const clip = addSvg(defs, 'clipPath', { id:'arena-floor-clip' });
-    addSvg(clip, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665 });
-
-    const layer = addSvg(svg, 'g', { class:'arena-backdrop-layer' });
-    addSvg(layer, 'rect', { x:0, y:0, width:BOARD_VIEW.width, height:BOARD_VIEW.height, class:'arena-night' });
-
-    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:1010, ry:755, class:'arena-ground-shadow' });
-    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:920, ry:690, class:'arena-wall-outer' });
-    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665, class:'arena-floor' });
-    addArenaSpeckles(layer, 'arena-floor-clip');
-    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:885, ry:665, class:'arena-floor-line' });
-    addSvg(layer, 'ellipse', { cx:CX, cy:CY, rx:540, ry:400, class:'arena-inner-wear' });
+    addSvg(svg, 'g', { class:'arena-backdrop-layer' });
   }
 
   function rollDetail(notation){
@@ -1703,15 +1661,17 @@ async function applyRewardList(player, rewards, labelPrefix){
       const accessoryName = p.accessory ? I18N().entity('accessory', p.accessoryKey, p.accessory.name) : I18N().t('no_accessory','无饰品');
       return `<div class="player-box${p.id===active.id?' active':''}">
         <div class="player-title"><strong>${p.label}</strong><span>${I18N().entity('profession', p.professionKey, p.profession.name)} / ${I18N().entity('weapon', p.weaponKey, p.weapon.name)} / ${accessoryName}</span></div>
-        <div class="stat-line">${I18N().t('hp','生命')} ${p.hp} / ${p.maxHp}</div>
+        <div class="hud-metrics">
+          <span>${I18N().t('hp','生命')} ${p.hp}/${p.maxHp}</span>
+          <span>${I18N().t('block','格挡')} ${p.block}</span>
+          <span>${I18N().t('deck_count','牌库')} ${p.deck.length}</span>
+          <span>${I18N().t('hand_count','手牌')} ${p.hand.length}</span>
+          <span>${I18N().t('discard_count','弃牌')} ${p.discard.length}</span>
+        </div>
         <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
-        <div class="stat-line">${I18N().t('block','格挡')} ${p.block}</div>
         <div class="block-bar"><div class="block-fill" style="width:${blockPct}%"></div></div>
-        <div class="stat-line">${I18N().t('weapon_basic','武器普攻')}：${p.weapon.basic.damage} / ${p.weapon.basic.type} / ${I18N().t('distance','距离')} ${p.weapon.basic.range}</div>
-        <div class="stat-line">${I18N().t('deck_count','牌库')} ${p.deck.length} / ${I18N().t('hand_count','手牌')} ${p.hand.length} / ${I18N().t('discard_count','弃牌')} ${p.discard.length}</div>
-        <div class="stat-line">${I18N().t('action','行动')}：职业卡 ${p.turn.classOrGuardianUsed?'✓':'○'}${(p.buffs.extraClassCardUses||0)>0?` +${p.buffs.extraClassCardUses}`:''} / 武器卡 ${p.turn.weaponOrAccessoryUsed?'✓':'○'} / 移动 ${p.turn.move?'✓':'○'} / 普攻 ${p.turn.basicSpent}/${1 + (p.buffs.extraBasicCap||0)} / 格挡 ${p.turn.autoBlockTriggered?'✓':'○'}</div>
-        <div class="stat-line">${I18N().t('status_skeleton','骷髅')} ${p.summons?.skeleton||0} / ${I18N().t('status_dragon','骨龙')} ${p.summons?.bone_dragon||0}</div>
-        <div>${formatStatuses(p)}</div>
+        <div class="stat-line action-line">${I18N().t('action','行动')}：职 ${p.turn.classOrGuardianUsed?'✓':'○'}${(p.buffs.extraClassCardUses||0)>0?`+${p.buffs.extraClassCardUses}`:''} / 武 ${p.turn.weaponOrAccessoryUsed?'✓':'○'} / 移 ${p.turn.move?'✓':'○'} / 普 ${p.turn.basicSpent}/${1 + (p.buffs.extraBasicCap||0)} / 格 ${p.turn.autoBlockTriggered?'✓':'○'}</div>
+        <div class="status-row">${formatStatuses(p)}</div>
       </div>`;
     }).join('')}</div>`;
     $('turn-indicator').textContent = state.winner ? '对局结束' : `轮到 ${active.label}`;
@@ -1745,17 +1705,17 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function tileMaterialFill(tile, centerActive, isSpikeTile, inDanger){
     if(centerActive) return '#4d315c';
-    if(isSpikeTile || inDanger) return 'url(#tile-tomb-pattern)';
-    if(tile.type === 'start') return 'url(#tile-grass-pattern)';
-    return 'url(#tile-stone-pattern)';
+    if(isSpikeTile || inDanger) return '#8c4c4c';
+    if(tile.type === 'start') return '#9db36f';
+    return '#d8c384';
   }
 
   function tileMaterialOpacity(tile, centerActive, isSpikeTile, inDanger){
-    if(centerActive) return '0.48';
-    if(isSpikeTile) return '0.78';
-    if(inDanger) return '0.68';
-    if(tile.type === 'start') return '0.7';
-    return '0.62';
+    if(centerActive) return '0.28';
+    if(isSpikeTile) return '0.2';
+    if(inDanger) return '0.16';
+    if(tile.type === 'start') return '0.14';
+    return '0.055';
   }
 
   function renderSpikeTowerComponent(layer, tile){
@@ -1926,7 +1886,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const shift = frameW * Math.max(0, frameCount - 1);
     const duration = Number(anim.duration || 600);
     const loop = anim.loop ? 'infinite' : '1';
-    const footOffset = profile.frameHeight === 96 ? 18 : 20;
+    const footOffset = Number(profile.footOffset ?? (profile.frameHeight === 96 ? 18 : 20));
 
     const g = document.createElementNS(svgNS, 'g');
     setSvgAttrs(g, {
@@ -1936,7 +1896,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     });
 
     const shadow = document.createElementNS(svgNS, 'ellipse');
-    setSvgAttrs(shadow, { cx: x, cy: y + 9, rx: Math.max(28, displayW * .22), ry: 9, class: 'pixel-unit-shadow' });
+    setSvgAttrs(shadow, { cx: x, cy: y + 10, rx: Math.max(28, displayW * .2), ry: 9, class: 'pixel-unit-shadow' });
     g.appendChild(shadow);
 
     const body = document.createElementNS(svgNS, 'g');
@@ -1965,7 +1925,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       g.insertBefore(aura, shadow.nextSibling);
     }
 
-    appendUnitLabels(g, p, x, y - displayH + 8, y + 38);
+    appendUnitLabels(g, p, x, y - displayH + footOffset - 6, y + 38);
     svg.appendChild(g);
     return true;
   }
@@ -2243,7 +2203,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const handReserve = window.innerWidth < 720 ? 160 : 118;
     const availableH = Math.max(300, window.innerHeight - wrapRect.top - handReserve);
     const fitted = Math.min(availableW / BOARD_VIEW.width, availableH / BOARD_VIEW.height);
-    const preferredMin = window.innerWidth >= 1500 ? 0.64 : window.innerWidth >= 1000 ? 0.56 : window.innerWidth >= 720 ? 0.48 : 0.32;
+    const preferredMin = window.innerWidth >= 1500 ? 0.68 : window.innerWidth >= 1000 ? 0.58 : window.innerWidth >= 720 ? 0.48 : 0.32;
     const fit = Math.max(preferredMin, fitted);
     setBoardZoom(fit, true);
   }

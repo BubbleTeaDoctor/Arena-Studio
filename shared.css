@@ -53,7 +53,7 @@ select,input,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px
 .card-name{font-size:18px;font-weight:700}
 .card-meta{color:var(--warn);font-size:12px}
 .card-text{color:var(--muted);line-height:1.45;font-size:14px}
-.top-row{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.top-row{display:grid;grid-template-columns:minmax(360px,720px) minmax(280px,440px);gap:10px;align-items:start}
 .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .player-box{background:var(--panel2);border-radius:12px;padding:12px}
 .player-box.active{outline:2px solid var(--accent)}
@@ -63,7 +63,7 @@ select,input,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px
 .block-fill{background:linear-gradient(90deg,#7bb2ff,#d0e0ff);height:100%}
 .stat-line{font-size:14px;color:var(--muted);margin:6px 0}
 .status-chip{display:inline-block;margin-right:6px;margin-top:6px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
-.log{max-height:300px;overflow:auto;display:grid;gap:8px}
+.log{max-height:160px;overflow:auto;display:grid;gap:8px}
 .log-entry{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.03);border-left:3px solid #8ec5ff}
 .choice-panel{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .choice-title{width:100%;color:var(--warn)}
@@ -138,8 +138,8 @@ body.game-theme{
 .game-theme .board-wrap{
   background:#070907;
   border:1px solid rgba(225,196,91,.18);
-  min-height:560px;
-  max-height:calc(100vh - 245px);
+  min-height:640px;
+  max-height:calc(100vh - 185px);
   overflow:auto;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
 }
@@ -150,14 +150,10 @@ body.game-theme{
   height:1225px;
   min-width:0;
   min-height:0;
-  background:
-    radial-gradient(circle at 50% 45%,rgba(225,196,91,.08),transparent 46%),
-    linear-gradient(180deg,#111810,#080a08);
+  background:transparent;
 }
 .game-theme #board.black-hole-off{
-  background:
-    radial-gradient(circle at 50% 48%,rgba(110,214,196,.08),transparent 42%),
-    linear-gradient(180deg,#1a2119,#101510);
+  background:transparent;
 }
 .battle-toolbar{align-items:center}
 .toolbar-spacer{flex:1 1 auto}
@@ -165,13 +161,8 @@ body.game-theme{
 .board-zoom-controls button{padding:7px 10px;min-width:36px}
 .board-zoom-controls .badge{min-width:58px;text-align:center}
 .arena-backdrop-layer{pointer-events:none}
-.arena-night{fill:#080b08}
-.arena-ground-shadow{fill:#10150f;stroke:#1e291d;stroke-width:72;opacity:.96}
-.arena-wall-outer{fill:none;stroke:#343328;stroke-width:38;opacity:.72}
-.arena-floor{fill:url(#arena-stone-pattern);stroke:#1f201a;stroke-width:8}
-.arena-floor-line{fill:none;stroke:rgba(226,198,128,.18);stroke-width:4;stroke-dasharray:28 18}
-.arena-inner-wear{fill:none;stroke:rgba(8,10,8,.18);stroke-width:64}
-.game-theme .tile polygon{stroke:rgba(245,222,149,.62);stroke-width:2.4}
+.arena-night,.arena-ground-shadow,.arena-wall-outer,.arena-floor,.arena-floor-line,.arena-inner-wear{display:none}
+.game-theme .tile polygon{stroke:rgba(245,222,149,.76);stroke-width:2.6}
 .game-theme .tile.valid-move polygon{stroke:var(--move);filter:drop-shadow(0 0 6px rgba(127,217,138,.45))}
 .game-theme .tile.valid-target polygon{fill:#a92f34;opacity:.62;stroke:var(--target);stroke-width:4;filter:drop-shadow(0 0 9px rgba(255,69,69,.72))}
 .game-theme .tile text{font-size:13px;font-weight:800;fill:#f9edc5;paint-order:stroke;stroke:#080a08;stroke-width:4px}
@@ -238,6 +229,8 @@ body.game-theme{
   transform-origin:center 118%;
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease;
   touch-action:manipulation;
+  overflow:hidden;
+  min-width:0;
 }
 .game-theme .hand .card:first-child{margin-left:0}
 .game-theme .hand .card.selected{
@@ -255,9 +248,9 @@ body.game-theme{
   pointer-events:none;
   box-shadow:0 0 18px rgba(110,214,196,.24);
 }
-.game-theme .hand .card-name{font-size:18px;line-height:1.16}
-.game-theme .hand .card-meta{font-size:12px}
-.game-theme .hand .card-text{font-size:14px;line-height:1.42;overflow:auto}
+.game-theme .hand .card-name{font-size:18px;line-height:1.16;overflow-wrap:anywhere;word-break:break-word}
+.game-theme .hand .card-meta{font-size:12px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;word-break:break-word}
+.game-theme .hand .card-text{font-size:14px;line-height:1.38;max-height:170px;overflow:auto;overflow-wrap:anywhere;word-break:break-word;scrollbar-width:thin}
 @media (hover:hover){
   .game-theme .hand .card:hover,
   .game-theme .hand .card:focus-visible{
@@ -278,6 +271,80 @@ body.game-theme{
 .game-theme .hp-fill{background:linear-gradient(90deg,#b93f45,#e8aa57)}
 .game-theme .block-fill{background:linear-gradient(90deg,#4c918b,#bfe9df)}
 .game-theme .status-chip{border-radius:5px;border:1px solid rgba(225,196,91,.14)}
+
+.game-theme .top-row{
+  max-width:1180px;
+}
+.game-theme .top-row .panel{
+  padding:10px 12px;
+}
+.game-theme .top-row h2{
+  font-size:16px;
+  margin:0 0 8px;
+}
+.game-theme #player-info .info-grid{
+  grid-template-columns:repeat(2,minmax(220px,1fr));
+  gap:8px;
+}
+.game-theme #player-info .player-box{
+  padding:8px;
+}
+.game-theme .player-title{
+  margin-bottom:4px;
+  font-size:12px;
+}
+.game-theme .player-title span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.game-theme .stat-line{
+  font-size:12px;
+  margin:3px 0;
+}
+.game-theme .hud-metrics{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  color:#d9e0cf;
+  font-size:12px;
+  line-height:1.25;
+  margin-bottom:3px;
+}
+.game-theme .hud-metrics span{
+  white-space:nowrap;
+}
+.game-theme .status-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:3px;
+  max-height:24px;
+  overflow:hidden;
+}
+.game-theme .action-line{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.game-theme .top-row .hp-bar,
+.game-theme .top-row .block-bar{
+  height:8px;
+  margin-top:3px;
+}
+.game-theme .top-row .status-chip{
+  font-size:11px;
+  padding:2px 6px;
+  margin-top:3px;
+}
+.game-theme .log{
+  max-height:92px;
+  gap:4px;
+}
+.game-theme .log-entry{
+  padding:6px 8px;
+  font-size:12px;
+}
 
 .pixel-unit{transform-box:fill-box;transform-origin:center bottom;shape-rendering:crispEdges}
 .sprite-unit{pointer-events:none;shape-rendering:crispEdges}
@@ -314,7 +381,7 @@ body.game-theme{
   .game-theme .battle-toolbar{gap:7px}
   .game-theme .toolbar-spacer{display:none}
   .game-theme .board-zoom-controls{width:100%;margin-left:0;justify-content:flex-end}
-  .game-theme .board-wrap{min-height:420px;max-height:calc(100vh - 220px)}
+  .game-theme .board-wrap{min-height:430px;max-height:calc(100vh - 210px)}
   .game-theme #game-screen{padding-bottom:265px}
   .game-theme #hand-panel{left:6px;right:6px;bottom:6px;padding:0 8px 6px}
   .game-theme #hand-panel h2{font-size:16px}
@@ -325,5 +392,7 @@ body.game-theme{
   .game-theme .hand .card.selected{transform:translateY(-42px) rotate(0deg) scale(1.05)}
   .game-theme .hand .card-name{font-size:16px}
   .game-theme .hand .card-meta{font-size:12px}
-  .game-theme .hand .card-text{font-size:13px}
+  .game-theme .hand .card-text{font-size:13px;max-height:124px}
+  .game-theme #player-info .info-grid{grid-template-columns:1fr}
+  .game-theme .top-row{max-width:none}
 }
