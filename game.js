@@ -16,7 +16,7 @@
     magicTrap: 'assets/map/traps/magic-trap-level-2.png',
     arrowTrap: 'assets/map/traps/arrow-trap-level-2.png',
     arrowProjectile: 'assets/map/traps/arrow.png',
-    markFx: 'assets/map/fx/mark-red.png'
+    markFx: 'assets/map/fx/mark-red-row.png'
   };
   const LIGHTNING_FRAMES = Array.from({ length: 14 }, (_, i) => `assets/map/fx/lightning/frame-${i}.png`);
   const SUMMON_SPRITES = {
@@ -172,7 +172,7 @@
       }
     },
     'priest-knight': {
-      frameWidth: 100, frameHeight: 64, scale: 1.85, footOffset: 18,
+      frameWidth: 100, frameHeight: 64, scale: 1.65, footOffset: 18,
       animations: {
         idle: { file: 'assets/sprites/priest-knight/idle.png', frames: 4, duration: 850, loop: true },
         run: { file: 'assets/sprites/priest-knight/run.png', frames: 7, duration: 620, loop: true },
@@ -198,7 +198,7 @@
       }
     },
     ninja: {
-      frameWidth: 50, frameHeight: 37, scale: 2.65, footOffset: 12,
+      frameWidth: 50, frameHeight: 37, scale: 3.05, footOffset: 12,
       animations: {
         idle: { file: 'assets/sprites/ninja/idle.png', frames: 4, duration: 850, loop: true },
         run: { file: 'assets/sprites/ninja/run.png', frames: 6, duration: 560, loop: true },
@@ -1265,10 +1265,63 @@ function playUnitAnim(player, anim, duration){
   }, animDuration);
 }
 
+function applyRewardListSync(player, rewards, labelPrefix){
+  for (const reward of (rewards || [])) {
+    if (!reward || !reward.type) continue;
+    if (reward.type === 'gain_block' || reward.type === 'block') {
+      const v = typeof reward.value === 'string' && reward.value.includes('d') ? rollOrValue(`${labelPrefix} 格挡`, reward.value) : Number(reward.value || 0);
+      player.block += v;
+      log(`${player.label} 获得 ${v} 格挡。`);
+    } else if (reward.type === 'heal') {
+      const v = typeof reward.value === 'string' && reward.value.includes('d') ? rollOrValue(`${labelPrefix} 治疗`, reward.value) : Number(reward.value || 0);
+      player.hp = Math.min(player.maxHp, player.hp + v);
+      log(`${player.label} 恢复 ${v} 生命。`);
+    } else if (reward.type === 'draw') {
+      drawCards(player, Number(reward.value || 1));
+    } else if (reward.type === 'buff_basic' || reward.type === 'buffBasic') {
+      const v = Number(reward.value || 0);
+      player.buffs.nextBasicFlat = (player.buffs.nextBasicFlat || 0) + v;
+      log(`${player.label} 的下次普攻 +${v}。`);
+    }
+  }
+}
+
+function applyDamageTakenTriggeredPassives(player, finalDamage, sourceName){
+  if(!player || finalDamage <= 0) return;
+  for(const passive of getProfessionPassives(player)){
+    if(!passive || passive.template !== 'threshold_reward_once_per_turn') continue;
+    const passiveKey = passive.key || passive.name || passive.template;
+    if(passive.config?.oncePerTurn && player.turn?.passiveOnceTriggered?.[passiveKey]) continue;
+    const thresholdType = passive.config?.thresholdType || passive.config?.checkType || '';
+    const normalizedType = ({
+      damage_taken: 'damage_taken',
+      taken_damage: 'damage_taken',
+      received_damage: 'damage_taken',
+      '受到伤害': 'damage_taken'
+    })[String(thresholdType)] || String(thresholdType);
+    if(normalizedType !== 'damage_taken') continue;
+    const thresholdValue = Number(
+      passive.config?.thresholdValue ??
+      passive.config?.threshold ??
+      passive.config?.damageThreshold ??
+      0
+    );
+    if(finalDamage >= thresholdValue){
+      applyRewardListSync(player, passive.config?.rewardList || [], passive.name || sourceName || '受伤被动');
+      if(passive.config?.oncePerTurn){
+        player.turn.passiveOnceTriggered = player.turn.passiveOnceTriggered || {};
+        player.turn.passiveOnceTriggered[passiveKey] = true;
+      }
+      log(`${player.label} 的被动 ${passive.name || passiveKey} 因受到 ${finalDamage} 伤害触发。`);
+    }
+  }
+}
+
 function takePureDamage(player, rawDamage){
   const damage = Math.max(0, Number(rawDamage || 0));
   if(!player || !player.alive || damage <= 0) return 0;
   player.hp -= damage;
+  applyDamageTakenTriggeredPassives(player, damage, '受伤');
   if(player.hp <= 0) finalizePlayerState(player);
   else playUnitAnim(player, 'hurt', 460);
   return damage;
@@ -1295,9 +1348,10 @@ function dealDamage(attacker, target, rawDamage, meta){
   const finalDamage = Math.max(0, damage - blocked);
   target.block = Math.max(0, Number(target.block || 0) - damage);
   target.hp -= finalDamage;
-  if(finalDamage > 0) playUnitAnim(target, target.hp <= 0 ? 'death' : 'hurt', target.hp <= 0 ? 900 : 460);
 
   if (allowReactions && finalDamage > 0) {
+    applyDamageTakenTriggeredPassives(target, finalDamage, sourceName);
+
     if ((target.buffs?.healOnDamagedCharges || 0) > 0 && target.buffs?.healOnDamaged) {
       target.buffs.healOnDamagedCharges = Math.max(0, Number(target.buffs.healOnDamagedCharges || 0) - 1);
       const heal = rollOrValue(`${target.label} 受伤后自疗`, target.buffs.healOnDamaged);
@@ -1329,6 +1383,8 @@ function dealDamage(attacker, target, rawDamage, meta){
       attemptReactiveMove(target, '受伤后');
     }
   }
+
+  if(finalDamage > 0) playUnitAnim(target, target.hp <= 0 ? 'death' : 'hurt', target.hp <= 0 ? 900 : 460);
 
   finalizePlayerState(target);
   if (attacker) finalizePlayerState(attacker);
@@ -1410,10 +1466,10 @@ async function applyRewardList(player, rewards, labelPrefix){
           'raw_damage':'dealt_damage',
           'dealt_damage':'dealt_damage'
         })[String(thresholdType)] || String(thresholdType);
-        const passed = normalizedType === 'dealt_damage' ? rawDamage >= thresholdValue : false;
+        if(normalizedType !== 'dealt_damage') continue;
+        const passed = rawDamage >= thresholdValue;
         pushDebug('threshold_reward_once_per_turn.check', { player: player.label, passiveKey, thresholdType: normalizedType, rawDamage, thresholdValue, passed, config: passive.config || {} });
         log(`${player.label} 检查被动 ${passive.name || passiveKey}：类型 ${normalizedType}，本次伤害 ${rawDamage}，阈值 ${thresholdValue}，结果 ${passed ? '通过' : '未通过'}。`);
-        if(normalizedType !== 'dealt_damage'){ log(`${player.label} 的被动 ${passive.name || passiveKey} 阈值类型未被识别：${normalizedType}`); }
         if(passed){
           await applyRewardList(player, passive.config?.rewardList || [], passive.name || sourceName || '被动');
           if(passive.config?.oncePerTurn){
@@ -1672,9 +1728,12 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   async function useProfessionPassive(){
     const p = current();
-    if (!p.alive || p.turn.classOrGuardianUsed) return;
-    const passive = Object.values(p.profession.passives || {})[0];
+    if (!p.alive) return;
+    const passiveEntry = Object.entries(p.profession.passives || {})[0];
+    const passiveKey = passiveEntry?.[0] || 'profession_passive';
+    const passive = passiveEntry?.[1];
     if (!passive) return;
+    if(passive.config?.oncePerTurn && p.turn?.passiveOnceTriggered?.[passiveKey]) return;
     if (passive.template === 'life_for_card_draw_once_per_turn'){
       playUnitAnim(p, 'cast', 620);
       const lifeCost = Number(passive.config?.lifeCost || 0);
@@ -1689,7 +1748,10 @@ async function applyRewardList(player, rewards, labelPrefix){
       }
       drawCards(p, drawCount);
       ensureHandLimit(p);
-      p.turn.classOrGuardianUsed = true;
+      if(passive.config?.oncePerTurn){
+        p.turn.passiveOnceTriggered = p.turn.passiveOnceTriggered || {};
+        p.turn.passiveOnceTriggered[passiveKey] = true;
+      }
       finishAfterAction();
       return;
     }
@@ -2436,31 +2498,37 @@ async function applyRewardList(player, rewards, labelPrefix){
     const sheetH = Number(opts.sheetHeight || frameH);
     const row = Math.max(0, Number(opts.row || 0));
     const duration = Number(opts.duration || 600);
-    const viewport = document.createElementNS(svgNS, 'svg');
-    setSvgAttrs(viewport, {
-      x: opts.x || 0,
-      y: opts.y || 0,
-      width: frameW * scale,
-      height: frameH * scale,
-      viewBox: `0 0 ${frameW} ${frameH}`,
-      class: opts.className || 'sprite-frame-svg',
-      overflow: 'hidden',
-      preserveAspectRatio: 'none'
-    });
-    viewport.style.overflow = 'hidden';
+    const x = Number(opts.x || 0);
+    const y = Number(opts.y || 0);
+    appendNativeSprite._id = (appendNativeSprite._id || 0) + 1;
+    const clipId = `sprite-clip-${appendNativeSprite._id}`;
+    const frame = document.createElementNS(svgNS, 'g');
+    setSvgAttrs(frame, { class: opts.className || 'sprite-frame-svg' });
+
+    const defs = document.createElementNS(svgNS, 'defs');
+    const clip = document.createElementNS(svgNS, 'clipPath');
+    setSvgAttrs(clip, { id: clipId, clipPathUnits: 'userSpaceOnUse' });
+    const clipRect = document.createElementNS(svgNS, 'rect');
+    setSvgAttrs(clipRect, { x, y, width: frameW * scale, height: frameH * scale });
+    clip.appendChild(clipRect);
+    defs.appendChild(clip);
+    frame.appendChild(defs);
+
+    const clipped = document.createElementNS(svgNS, 'g');
+    clipped.setAttribute('clip-path', `url(#${clipId})`);
     const img = document.createElementNS(svgNS, 'image');
     setSvgAttrs(img, {
       href: opts.file,
-      x: 0,
-      y: -row * frameH,
-      width: sheetW,
-      height: sheetH,
+      x,
+      y: y - row * frameH * scale,
+      width: sheetW * scale,
+      height: sheetH * scale,
       class: opts.imageClass || 'sprite-sheet-image',
       preserveAspectRatio: 'none'
     });
     img.setAttributeNS(xlinkNS, 'href', opts.file);
     if(frames > 1){
-      const values = Array.from({ length: frames }, (_, i) => String(-i * frameW)).join(';');
+      const values = Array.from({ length: frames }, (_, i) => String(x - i * frameW * scale)).join(';');
       const anim = document.createElementNS(svgNS, 'animate');
       setSvgAttrs(anim, {
         attributeName: 'x',
@@ -2472,9 +2540,10 @@ async function applyRewardList(player, rewards, labelPrefix){
       });
       img.appendChild(anim);
     }
-    viewport.appendChild(img);
-    parent.appendChild(viewport);
-    return viewport;
+    clipped.appendChild(img);
+    frame.appendChild(clipped);
+    parent.appendChild(frame);
+    return frame;
   }
 
   function appendUnitLabels(g, p, x, nameY, hpY){
@@ -2496,7 +2565,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       frameHeight: 64,
       frames: 12,
       sheetWidth: 768,
-      sheetHeight: 576,
+      sheetHeight: 64,
       row: 0,
       scale: 0.78,
       duration: 680,
@@ -2713,14 +2782,16 @@ async function applyRewardList(player, rewards, labelPrefix){
     const btn = $('btn-passive');
     if (!btn) return;
     const p = current();
-    const passive = Object.values(p.profession.passives || {})[0];
+    const passiveEntry = Object.entries(p.profession.passives || {})[0];
+    const passiveKey = passiveEntry?.[0] || 'profession_passive';
+    const passive = passiveEntry?.[1];
     if (!passive || passive.template !== 'life_for_card_draw_once_per_turn'){
       btn.style.display = 'none';
       return;
     }
     btn.style.display = '';
     btn.textContent = `${passive.name || '职业被动'}（-${passive.config?.lifeCost || 0} 生命 / +${passive.config?.drawCount || 1} 抽）`;
-    btn.disabled = !!p.turn.classOrGuardianUsed || !p.alive;
+    btn.disabled = !!p.turn?.passiveOnceTriggered?.[passiveKey] || !p.alive;
   }
 
   function render(){
