@@ -234,6 +234,11 @@ body.game-theme{
   line-height:1;
   white-space:nowrap;
 }
+.game-theme.battle-running .battle-toolbar button.active{
+  border-color:rgba(255,104,82,.7);
+  color:#ffe0cd;
+  filter:brightness(.9);
+}
 .game-theme.battle-running .battle-lang-bar{
   flex:0 0 auto;
   margin:0 0 0 6px;
@@ -273,15 +278,19 @@ body.game-theme{
 .game-theme .tile polygon{stroke:rgba(255,242,178,.96);stroke-width:3.2;filter:drop-shadow(0 1px 0 rgba(0,0,0,.72))}
 .game-theme .tile.valid-move polygon{fill:rgba(112,255,40,.34);opacity:.78;stroke:var(--move);stroke-width:5;filter:drop-shadow(0 0 10px rgba(157,255,57,.78))}
 .game-theme .tile.valid-target polygon{fill:#a92f34;opacity:.62;stroke:var(--target);stroke-width:4;filter:drop-shadow(0 0 9px rgba(255,69,69,.72))}
+.game-theme .tile.move-route polygon{fill:rgba(255,210,90,.42);opacity:.82;stroke:#ffd35c;stroke-width:5;filter:drop-shadow(0 0 10px rgba(255,211,92,.74))}
 .game-theme .tile text{font-size:13px;font-weight:800;fill:#f9edc5;paint-order:stroke;stroke:#080a08;stroke-width:4px}
 .map-component-layer,.map-component{pointer-events:none}
 .map-component-shadow{fill:rgba(0,0,0,.42)}
-.spike-floor-sprite,.black-hole-fx,.center-trap-image,.magic-trap-image,.arrow-trap-image,.mark-fx-image,.summon-sprite-image,.arrow-projectile{image-rendering:pixelated}
+.spike-floor-sprite,.black-hole-fx,.center-trap-image,.magic-trap-image,.arrow-trap-image,.mark-fx-image,.summon-sprite-image,.arrow-projectile,.fire-hit-fx-image,.fire-projectile-image,.lightning-fx-image{image-rendering:pixelated}
 .spike-floor-sprite{filter:drop-shadow(0 4px 0 rgba(0,0,0,.35)) drop-shadow(0 0 7px rgba(255,86,86,.32))}
 .obelisk-sprite-frame{overflow:hidden;filter:drop-shadow(0 6px 0 rgba(0,0,0,.42)) drop-shadow(0 0 10px rgba(0,235,255,.24))}
 .obelisk-shadow{fill:rgba(0,0,0,.5)}
 .hazard-fx-layer,.lightning-strike-component,.arrow-projectile-component,.summon-unit{pointer-events:none}
 .lightning-fx-frame{overflow:hidden;filter:drop-shadow(0 0 8px rgba(255,92,72,.82)) drop-shadow(0 0 14px rgba(255,190,72,.42))}
+.blue-lightning-fx-frame{filter:drop-shadow(0 0 11px rgba(72,202,255,.9)) drop-shadow(0 0 20px rgba(55,122,255,.55))}
+.fire-hit-fx-frame{overflow:hidden;filter:drop-shadow(0 0 10px rgba(255,56,39,.86)) drop-shadow(0 0 18px rgba(255,151,55,.55))}
+.fire-projectile-frame{overflow:hidden;filter:drop-shadow(0 0 9px rgba(255,82,42,.9)) drop-shadow(0 0 16px rgba(255,189,75,.56))}
 .center-trap-frame{overflow:hidden;filter:drop-shadow(0 8px 0 rgba(0,0,0,.46)) drop-shadow(0 0 14px rgba(255,75,26,.74))}
 .center-trap-shadow{fill:rgba(0,0,0,.52)}
 .magic-trap-frame{overflow:hidden;filter:drop-shadow(0 4px 0 rgba(0,0,0,.38)) drop-shadow(0 0 10px rgba(136,88,255,.62))}

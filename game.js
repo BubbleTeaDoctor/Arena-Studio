@@ -28,9 +28,26 @@
     spellImpact: ['assets/audio/spell-impact.ogg', 'assets/audio/spell-impact.wav'],
     trap: ['assets/audio/trap-trigger.ogg', 'assets/audio/trap-trigger.wav']
   };
-  const audioState = { bgm: null, unlocked: false };
+  const audioState = { bgm: null, unlocked: false, muted: false };
   const audioSourceCache = {};
   const LIGHTNING_FRAMES = Array.from({ length: 14 }, (_, i) => `assets/map/fx/lightning/frame-${i}.png`);
+  const BLUE_LIGHTNING_FRAMES = Array.from({ length: 14 }, (_, i) => `assets/map/fx/lightning-blue/frame-${i}.png`);
+  const FIRE_HIT_FX = {
+    file: 'assets/map/fx/fire-hit-row.png',
+    frameWidth: 64,
+    frameHeight: 64,
+    frames: 12,
+    scale: 1.45,
+    duration: 520
+  };
+  const FIRE_PROJECTILE_FX = {
+    file: 'assets/map/fx/fire-projectile-row.png',
+    frameWidth: 64,
+    frameHeight: 64,
+    frames: 14,
+    scale: 0.92,
+    duration: 420
+  };
   const SUMMON_SPRITES = {
     skeleton: {
       frameWidth: 64,
@@ -64,6 +81,13 @@
     scale: 1.65,
     duration: 560,
     files: LIGHTNING_FRAMES
+  };
+  const BLUE_LIGHTNING_FX = {
+    frameWidth: 64,
+    frameHeight: 64,
+    scale: 3.3,
+    duration: 560,
+    files: BLUE_LIGHTNING_FRAMES
   };
   const SPRITE_PROFILES = {
     'knight-blue': {
@@ -323,6 +347,7 @@
   }
 
   function playSfx(name, volume = 0.55){
+    if(audioState.muted) return;
     const src = resolveAudioSource(name);
     if(!src) return;
     try{
@@ -347,14 +372,45 @@
 
   function startBattleAudio(){
     audioState.unlocked = true;
+    if(audioState.muted){
+      if(audioState.bgm) audioState.bgm.pause();
+      return;
+    }
     try{
       if(!audioState.bgm){
         audioState.bgm = new Audio(resolveAudioSource('bgm'));
         audioState.bgm.loop = true;
         audioState.bgm.volume = 0.22;
       }
+      audioState.bgm.muted = false;
       audioState.bgm.play().catch(() => {});
     } catch (_) {}
+  }
+
+  function updateMuteButton(){
+    const btn = $('btn-mute');
+    if(!btn) return;
+    btn.textContent = audioState.muted ? '取消静音' : '静音';
+    btn.classList.toggle('active', audioState.muted);
+    btn.setAttribute('aria-pressed', audioState.muted ? 'true' : 'false');
+  }
+
+  function setAudioMuted(muted){
+    audioState.muted = !!muted;
+    try{ localStorage.setItem('arena_audio_muted', audioState.muted ? '1' : '0'); } catch (_) {}
+    if(audioState.bgm){
+      audioState.bgm.muted = audioState.muted;
+      if(audioState.muted) audioState.bgm.pause();
+      else if(audioState.unlocked) audioState.bgm.play().catch(() => {});
+    } else if(!audioState.muted && audioState.unlocked){
+      startBattleAudio();
+    }
+    updateMuteButton();
+  }
+
+  function initAudioSettings(){
+    try{ audioState.muted = localStorage.getItem('arena_audio_muted') === '1'; } catch (_) {}
+    updateMuteButton();
   }
 
   const R = 9, SIZE = 48, CX = Math.round(SIZE*Math.sqrt(3)*(R+2)), CY = Math.round(SIZE*1.5*(R+2));
@@ -816,7 +872,7 @@
   function triggerArrowProjectile(fromTile, toTile){
     if(!fromTile || !toTile) return;
     const id = `arrow-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const fx = { id, from: deep(fromTile), to: deep(toTile), startedAt: performance.now(), duration: 360 };
+    const fx = { id, name: 'arrow', from: deep(fromTile), to: deep(toTile), startedAt: performance.now(), duration: 360 };
     state.projectileAnims = (state.projectileAnims || []).filter(x => performance.now() - x.startedAt < x.duration + 80);
     state.projectileAnims.push(fx);
     if(state.board?.length && $('board')) renderBoard();
@@ -831,6 +887,65 @@
     }, fx.duration + 70);
     state.projectileTimers = state.projectileTimers || [];
     state.projectileTimers.push({ id, interval, timeout });
+  }
+
+  function triggerTimedTileEffect(name, tile, duration, extra = {}){
+    if(!tile) return;
+    const id = `${name}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const fx = Object.assign({ id, name, startedAt: performance.now(), target: deep(tile), duration }, extra);
+    state.mapHazardAnims.set(id, fx);
+    if(state.board?.length && $('board')) renderBoard();
+    const interval = setInterval(() => {
+      if(state.mapHazardAnims.has(id) && state.board?.length && $('board')) renderBoard();
+    }, 40);
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      state.mapHazardAnims.delete(id);
+      state.mapHazardTimers.delete(id);
+      if(state.board?.length && $('board')) renderBoard();
+    }, duration + 80);
+    state.mapHazardTimers.set(id, { interval, timeout });
+  }
+
+  function triggerBlueLightning(tile){
+    triggerTimedTileEffect('blue_lightning', tile, BLUE_LIGHTNING_FX.duration);
+  }
+
+  function triggerFireImpact(tile){
+    triggerTimedTileEffect('fire_hit', tile, FIRE_HIT_FX.duration);
+  }
+
+  function triggerFireProjectile(fromTile, toTile){
+    if(!fromTile || !toTile) return;
+    const id = `fire-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const fx = { id, name: 'fire_projectile', from: deep(fromTile), to: deep(toTile), startedAt: performance.now(), duration: FIRE_PROJECTILE_FX.duration };
+    state.projectileAnims = (state.projectileAnims || []).filter(x => performance.now() - x.startedAt < x.duration + 80);
+    state.projectileAnims.push(fx);
+    if(state.board?.length && $('board')) renderBoard();
+    const interval = setInterval(() => {
+      if(state.board?.length && $('board')) renderBoard();
+    }, 32);
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      state.projectileAnims = (state.projectileAnims || []).filter(x => x.id !== id);
+      state.projectileTimers = (state.projectileTimers || []).filter(t => t.id !== id);
+      if(state.board?.length && $('board')) renderBoard();
+    }, fx.duration + 70);
+    state.projectileTimers = state.projectileTimers || [];
+    state.projectileTimers.push({ id, interval, timeout });
+  }
+
+  function triggerCardVisual(cardKey, cardDef, caster, target){
+    if(!target?.pos || !caster?.pos) return;
+    const token = `${cardKey || ''} ${cardDef?.name || ''}`.toLowerCase();
+    if(token.includes('fireball') || token.includes('火球')){
+      triggerFireProjectile(caster.pos, target.pos);
+      setTimeout(() => triggerFireImpact(target.pos), Math.max(160, FIRE_PROJECTILE_FX.duration - 80));
+      return;
+    }
+    if(token.includes('lightning') || token.includes('雷击')){
+      triggerBlueLightning(target.pos);
+    }
   }
 
   function getMapToken(tile){
@@ -1116,6 +1231,30 @@
 
   function weaponAttackAnim(player){
     return weaponPresentation(player).anim || 'attack';
+  }
+
+  function hasSpriteAnim(player, anim){
+    const profile = spriteProfileFor(player);
+    return !!(profile && profile.animations && profile.animations[anim]);
+  }
+
+  function castOrRangedAnim(player){
+    if(hasSpriteAnim(player, 'cast')) return 'cast';
+    if(hasSpriteAnim(player, 'ranged')) return 'ranged';
+    return 'attack';
+  }
+
+  function isWeaponOrigin(origin){
+    const raw = String(origin || '');
+    return raw.includes('武器') || raw.includes('姝﹀櫒');
+  }
+
+  function cardActionAnim(player, handItem, cardDef){
+    if(cardDef?.config?.spell) return castOrRangedAnim(player);
+    if(isWeaponOrigin(handItem?.origin)) return weaponAttackAnim(player);
+    const range = Number(cardDef?.config?.range || cardDef?.config?.baseRange || 1);
+    if(range > 1 || cardDef?.template === 'aoe') return castOrRangedAnim(player);
+    return 'attack';
   }
 
   function spriteProfileKeyFor(player){
@@ -1447,12 +1586,24 @@ function applyDamageTakenTriggeredPassives(player, finalDamage, sourceName){
   }
 }
 
+function applyHealOnDamaged(player, finalDamage){
+  if(!player || finalDamage <= 0) return;
+  if (!((player.buffs?.healOnDamagedCharges || 0) > 0 && player.buffs?.healOnDamaged)) return;
+  player.buffs.healOnDamagedCharges = Math.max(0, Number(player.buffs.healOnDamagedCharges || 0) - 1);
+  const heal = rollOrValue(`${player.label} 受伤后自疗`, player.buffs.healOnDamaged);
+  if (heal > 0) {
+    player.hp = Math.min(player.maxHp, player.hp + heal);
+    log(`${player.label} 受伤后立即恢复 ${heal} 生命。`);
+  }
+}
+
 function takePureDamage(player, rawDamage){
   const damage = Math.max(0, Number(rawDamage || 0));
   if(!player || !player.alive || damage <= 0) return 0;
   playSfx('meleeHit', 0.36);
   player.hp -= damage;
   applyDamageTakenTriggeredPassives(player, damage, '受伤');
+  applyHealOnDamaged(player, damage);
   if(player.hp <= 0) finalizePlayerState(player);
   else playUnitAnim(player, 'hurt', 460);
   return damage;
@@ -1484,17 +1635,11 @@ function dealDamage(attacker, target, rawDamage, meta){
   target.hp -= finalDamage;
   if(damage > 0) playHitSfx(attacker, attackAnim === 'cast' || info.spell === true);
 
+  let healOnDamagedApplied = false;
   if (allowReactions && finalDamage > 0) {
     applyDamageTakenTriggeredPassives(target, finalDamage, sourceName);
-
-    if ((target.buffs?.healOnDamagedCharges || 0) > 0 && target.buffs?.healOnDamaged) {
-      target.buffs.healOnDamagedCharges = Math.max(0, Number(target.buffs.healOnDamagedCharges || 0) - 1);
-      const heal = rollOrValue(`${target.label} 受伤后自疗`, target.buffs.healOnDamaged);
-      if (heal > 0) {
-        target.hp = Math.min(target.maxHp, target.hp + heal);
-        log(`${target.label} 受伤后恢复 ${heal} 生命。`);
-      }
-    }
+    applyHealOnDamaged(target, finalDamage);
+    healOnDamagedApplied = true;
 
     if (attacker && attacker.alive && (target.buffs?.disarmAttackerCharges || 0) > 0 && Number(target.buffs?.disarmAttackerOnHit || 0) > 0) {
       target.buffs.disarmAttackerCharges = Math.max(0, Number(target.buffs.disarmAttackerCharges || 0) - 1);
@@ -1518,6 +1663,7 @@ function dealDamage(attacker, target, rawDamage, meta){
       attemptReactiveMove(target, '受伤后');
     }
   }
+  if(!healOnDamagedApplied) applyHealOnDamaged(target, finalDamage);
 
   if(finalDamage > 0) playUnitAnim(target, target.hp <= 0 ? 'death' : 'hurt', target.hp <= 0 ? 900 : 460);
 
@@ -1955,7 +2101,7 @@ async function applyRewardList(player, rewards, labelPrefix){
   function getReachableTiles(player){
     if(player.turn.move) return new Set();
     if(player.statuses.root>0 || player.statuses.stun>0) return new Set();
-    const maxMove = player.statuses.slow>0 ? Math.ceil(player.moveBase/2) : player.moveBase;
+    const maxMove = movementStepLimit(player);
     const visited=new Set([key(player.pos)]), q=[{c:player.pos,d:0}], res=new Set();
     while(q.length){
       const cur=q.shift();
@@ -1968,11 +2114,86 @@ async function applyRewardList(player, rewards, labelPrefix){
     return res;
   }
 
+  function movementStepLimit(player){
+    return player.statuses.slow>0 ? Math.ceil(player.moveBase/2) : player.moveBase;
+  }
+
+  function currentMovePath(){
+    return state.pending?.type === 'move' && Array.isArray(state.pending.path) ? state.pending.path : [];
+  }
+
+  function movePathEndpoint(player){
+    const path = currentMovePath();
+    return path.length ? path[path.length - 1] : player.pos;
+  }
+
+  function canStepToMoveTile(player, tile){
+    if(!player || !tile || player.turn.move) return false;
+    if(currentMovePath().length >= movementStepLimit(player)) return false;
+    if(!state.boardMap.has(key(tile)) || isBlockedTile(tile) || getPlayerAt(tile)) return false;
+    return dist(movePathEndpoint(player), tile) === 1;
+  }
+
+  function movementNextTiles(player){
+    if(!player || player.turn.move || player.statuses.root>0 || player.statuses.stun>0) return [];
+    return neighbors(movePathEndpoint(player)).filter(tile => canStepToMoveTile(player, tile));
+  }
+
+  function resetMovePath(){
+    if(state.pending?.type === 'move') state.pending.path = [];
+  }
+
+  async function confirmMovePath(){
+    const p = current();
+    const path = currentMovePath().map(deep);
+    if(!p || state.pending?.type !== 'move' || !path.length) {
+      setHint('请先逐格选择移动路线。');
+      return;
+    }
+    p.turn.move = true;
+    p.turn.movedDistance = path.length;
+    for(const step of path){
+      if(!p.alive) break;
+      await movePlayerTo(p, step, { duration: 230, triggerPathEffects: false });
+      enterTile(p);
+    }
+    await applyMovementTriggeredPassives(p);
+    finishAfterAction();
+  }
+
+  function handleMovePathClick(tile){
+    const p = current();
+    if(!state.pending || state.pending.type !== 'move') return;
+    const path = currentMovePath();
+    const kk = key(tile);
+    const existingIndex = path.findIndex(step => key(step) === kk);
+    if(existingIndex >= 0){
+      state.pending.path = path.slice(0, existingIndex + 1);
+      render();
+      setHint(`移动路线 ${state.pending.path.length}/${movementStepLimit(p)}。点确认移动执行，点路径格可回退。`);
+      return;
+    }
+    if(kk === key(p.pos)){
+      resetMovePath();
+      render();
+      setHint('已清空移动路线，请重新逐格选择。');
+      return;
+    }
+    if(!canStepToMoveTile(p, tile)){
+      setHint('请选择路线末端相邻、未被占用的合法地块。');
+      return;
+    }
+    state.pending.path = path.concat([deep(tile)]);
+    render();
+    setHint(`移动路线 ${state.pending.path.length}/${movementStepLimit(p)}。继续点相邻格，或点确认移动。`);
+  }
+
   function highlightSet(){
-    const moves=new Set(), targets=new Set();
+    const moves=new Set(), targets=new Set(), route=new Set();
     const p=current();
     if(state.pending?.type==='move'){
-      getReachableTiles(p).forEach(x=>moves.add(x));
+      currentMovePath().forEach(tile => route.add(key(tile)));
+      movementNextTiles(p).forEach(tile => moves.add(key(tile)));
     } else if(state.pending?.type==='basic'){
       const b = getActiveBasicAttack(p);
       state.board.forEach(t=>{
@@ -1995,7 +2216,7 @@ async function applyRewardList(player, rewards, labelPrefix){
         }
       });
     }
-    return {moves,targets};
+    return {moves,targets,route};
   }
 
   function withinTargetRange(p, target, card){
@@ -2264,8 +2485,9 @@ async function applyRewardList(player, rewards, labelPrefix){
       if(cardDef.config.conditionalBonus?.condition==='moved_this_turn' && p.turn.movedDistance>0) dmg += await showDice('条件追加', resolvePlayerNotation(p, cardDef.config.conditionalBonus.bonusDamage));
       if(cardDef.config.conditionalBonus?.condition==='target_controlled' && isControlled(target)) dmg += Number(cardDef.config.conditionalBonus.bonusFlat || 0);
       if(cardDef.config.conditionalBonus?.condition==='target_hp_lte' && target.hp <= Number(cardDef.config.conditionalBonus.threshold||0)) dmg += await showDice('斩杀追加', resolvePlayerNotation(p, cardDef.config.conditionalBonus.bonusDamage));
-      const cardAnim = cardDef.config?.spell ? 'cast' : (handItem.origin === '武器技能' ? weaponAttackAnim(p) : 'attack');
-      const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardAnim });
+      const cardAnim = cardActionAnim(p, handItem, cardDef);
+      triggerCardVisual(handItem.cardKey, cardDef, p, target);
+      const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardAnim, spell: !!cardDef.config?.spell });
       if(cardDef.config.buffBasic) p.buffs.nextBasicFlat = (p.buffs.nextBasicFlat||0) + Number(cardDef.config.buffBasic||0);
       if(cardDef.config.gainBlock) p.block += await showDice('获得格挡', cardDef.config.gainBlock);
       if(!damageResult.dodged) applySourceOnHitEffects(p, target, cardDef.config || {}, cardDef.name);
@@ -2305,8 +2527,9 @@ async function applyRewardList(player, rewards, labelPrefix){
       const targets = state.players.filter(x=>x.alive && x.id!==p.id && dist(x.pos,tile)<=Number(cardDef.config.radius||1));
       for(const target of targets){
         let dmg = await showDice(cardDef.name, resolvePlayerNotation(p, cardDef.config.damage));
-        const cardAnim = cardDef.config?.spell ? 'cast' : (handItem.origin === '武器技能' ? weaponAttackAnim(p) : 'attack');
-        const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardAnim });
+        const cardAnim = cardActionAnim(p, handItem, cardDef);
+        triggerCardVisual(handItem.cardKey, cardDef, p, target);
+        const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardAnim, spell: !!cardDef.config?.spell });
         if(!damageResult.dodged) applySourceOnHitEffects(p, target, cardDef.config || {}, cardDef.name);
         log(`${p.label} 的 ${cardDef.name} 命中 ${target.label}，原始伤害 ${dmg}，实际伤害 ${damageResult.finalDamage}，目标当前生命 ${target.hp}，格挡 ${target.block}。`);
       }
@@ -2452,27 +2675,53 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function renderLightningEffect(layer, fxState){
     if(!fxState?.target) return;
+    const cfg = fxState.name === 'blue_lightning' ? BLUE_LIGHTNING_FX : LIGHTNING_FX;
     const {x,y} = hexToPixel(fxState.target);
-    const frameMs = LIGHTNING_FX.duration / Math.max(1, LIGHTNING_FX.files.length);
+    const frameMs = (fxState.duration || cfg.duration) / Math.max(1, cfg.files.length);
     const elapsed = Math.max(0, performance.now() - fxState.startedAt);
-    const frameIndex = Math.min(LIGHTNING_FX.files.length - 1, Math.floor(elapsed / frameMs));
-    const displayW = LIGHTNING_FX.frameWidth * LIGHTNING_FX.scale;
-    const displayH = LIGHTNING_FX.frameHeight * LIGHTNING_FX.scale;
-    const g = addSvg(layer, 'g', { class:'map-component lightning-strike-component', transform:`translate(${x} ${y})` });
+    const frameIndex = Math.min(cfg.files.length - 1, Math.floor(elapsed / frameMs));
+    const displayW = cfg.frameWidth * cfg.scale;
+    const displayH = cfg.frameHeight * cfg.scale;
+    const g = addSvg(layer, 'g', { class:`map-component lightning-strike-component ${fxState.name === 'blue_lightning' ? 'blue-lightning-strike' : ''}`, transform:`translate(${x} ${y})` });
     appendNativeSprite(g, {
-      file: LIGHTNING_FX.files[frameIndex],
-      frameWidth: LIGHTNING_FX.frameWidth,
-      frameHeight: LIGHTNING_FX.frameHeight,
+      file: cfg.files[frameIndex],
+      frameWidth: cfg.frameWidth,
+      frameHeight: cfg.frameHeight,
       frames: 1,
-      scale: LIGHTNING_FX.scale,
+      scale: cfg.scale,
       x: -displayW / 2,
       y: -displayH + 20,
-      className: 'sprite-frame-svg lightning-fx-frame',
+      className: `sprite-frame-svg lightning-fx-frame ${fxState.name === 'blue_lightning' ? 'blue-lightning-fx-frame' : ''}`,
       imageClass: 'sprite-sheet-image lightning-fx-image'
     });
   }
 
-  function renderArrowProjectile(layer, fxState){
+  function renderStripTileEffect(layer, fxState, cfg, className){
+    if(!fxState?.target) return;
+    const {x,y} = hexToPixel(fxState.target);
+    const frameMs = (fxState.duration || cfg.duration) / Math.max(1, cfg.frames || 1);
+    const elapsed = Math.max(0, performance.now() - fxState.startedAt);
+    const frameIndex = Math.min((cfg.frames || 1) - 1, Math.floor(elapsed / frameMs));
+    const displayW = cfg.frameWidth * cfg.scale;
+    const displayH = cfg.frameHeight * cfg.scale;
+    const g = addSvg(layer, 'g', { class:`map-component ${className}-component`, transform:`translate(${x} ${y})` });
+    appendNativeSprite(g, {
+      file: cfg.file,
+      frameWidth: cfg.frameWidth,
+      frameHeight: cfg.frameHeight,
+      frames: 1,
+      frameIndex,
+      sheetWidth: cfg.frameWidth * cfg.frames,
+      sheetHeight: cfg.frameHeight,
+      scale: cfg.scale,
+      x: -displayW / 2,
+      y: -displayH + 8,
+      className: `sprite-frame-svg ${className}-frame`,
+      imageClass: `sprite-sheet-image ${className}-image`
+    });
+  }
+
+  function renderProjectileEffect(layer, fxState){
     if(!fxState?.from || !fxState?.to) return;
     const from = hexToPixel(fxState.from);
     const to = hexToPixel(fxState.to);
@@ -2482,6 +2731,28 @@ async function applyRewardList(player, rewards, labelPrefix){
     const y = from.y + (to.y - from.y) * t - 34;
     const angle = Math.atan2(to.y - from.y, to.x - from.x) * 180 / Math.PI;
     const g = addSvg(layer, 'g', { class:'arrow-projectile-component', transform:`translate(${x} ${y}) rotate(${angle})` });
+    if(fxState.name === 'fire_projectile'){
+      const cfg = FIRE_PROJECTILE_FX;
+      const frameMs = cfg.duration / Math.max(1, cfg.frames || 1);
+      const frameIndex = Math.min((cfg.frames || 1) - 1, Math.floor((performance.now() - fxState.startedAt) / frameMs));
+      const displayW = cfg.frameWidth * cfg.scale;
+      const displayH = cfg.frameHeight * cfg.scale;
+      appendNativeSprite(g, {
+        file: cfg.file,
+        frameWidth: cfg.frameWidth,
+        frameHeight: cfg.frameHeight,
+        frames: 1,
+        frameIndex,
+        sheetWidth: cfg.frameWidth * cfg.frames,
+        sheetHeight: cfg.frameHeight,
+        scale: cfg.scale,
+        x: -displayW / 2,
+        y: -displayH / 2,
+        className: 'sprite-frame-svg fire-projectile-frame',
+        imageClass: 'sprite-sheet-image fire-projectile-image'
+      });
+      return;
+    }
     addSvg(g, 'image', {
       href: MAP_ASSETS.arrowProjectile,
       x: -22,
@@ -2559,8 +2830,11 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function renderHazardEffects(svg){
     const layer = addSvg(svg, 'g', { class:'hazard-fx-layer' });
-    state.mapHazardAnims.forEach(fxState => renderLightningEffect(layer, fxState));
-    (state.projectileAnims || []).forEach(fxState => renderArrowProjectile(layer, fxState));
+    state.mapHazardAnims.forEach(fxState => {
+      if(fxState.name === 'fire_hit') renderStripTileEffect(layer, fxState, FIRE_HIT_FX, 'fire-hit-fx');
+      else renderLightningEffect(layer, fxState);
+    });
+    (state.projectileAnims || []).forEach(fxState => renderProjectileEffect(layer, fxState));
   }
 
   function renderBoard(){
@@ -2576,6 +2850,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       const isSpikeTile = t.type === 'spike';
       if(hl.moves.has(kk)) g.classList.add('valid-move');
       if(hl.targets.has(kk)) g.classList.add('valid-target');
+      if(hl.route?.has(kk)) g.classList.add('move-route');
       if(kk===key(active.pos)) g.classList.add('selected-origin');
       g.onclick = ()=>tileClick(t);
       const poly=document.createElementNS(svgNS,'polygon');
@@ -2675,6 +2950,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const sheetW = Number(opts.sheetWidth || frameW * frames);
     const sheetH = Number(opts.sheetHeight || frameH);
     const row = Math.max(0, Number(opts.row || 0));
+    const frameIndex = Math.max(0, Number(opts.frameIndex || 0));
     const duration = Number(opts.duration || 600);
     const x = Number(opts.x || 0);
     const y = Number(opts.y || 0);
@@ -2697,7 +2973,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const img = document.createElementNS(svgNS, 'image');
     setSvgAttrs(img, {
       href: opts.file,
-      x,
+      x: x - frameIndex * frameW * scale,
       y: y - row * frameH * scale,
       width: sheetW * scale,
       height: sheetH * scale,
@@ -2706,7 +2982,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     });
     img.setAttributeNS(xlinkNS, 'href', opts.file);
     if(frames > 1){
-      const values = Array.from({ length: frames }, (_, i) => String(x - i * frameW * scale)).join(';');
+      const values = Array.from({ length: frames }, (_, i) => String(x - (frameIndex + i) * frameW * scale)).join(';');
       const anim = document.createElementNS(svgNS, 'animate');
       setSvgAttrs(anim, {
         attributeName: 'x',
@@ -2972,9 +3248,19 @@ async function applyRewardList(player, rewards, labelPrefix){
     btn.disabled = !!p.turn?.passiveOnceTriggered?.[passiveKey] || !p.alive;
   }
 
+  function renderMoveConfirmButton(){
+    const btn = $('btn-confirm-move');
+    if(!btn) return;
+    const show = state.pending?.type === 'move' && currentMovePath().length > 0;
+    btn.style.display = show ? '' : 'none';
+    btn.textContent = show ? `确认移动 ${currentMovePath().length}/${movementStepLimit(current())}` : '确认移动';
+    btn.disabled = !show;
+  }
+
   function render(){
     renderPlayerInfo();
     renderPassiveButton();
+    renderMoveConfirmButton();
     renderBoard();
     renderHand();
   }
@@ -2983,16 +3269,8 @@ async function applyRewardList(player, rewards, labelPrefix){
     const p=current();
     if(state.pending?.type==='discard') return;
     const occ=getPlayerAt(tile);
-    if(state.pending?.type==='move' && !occ){
-      const reachable=getReachableTiles(p);
-      if(reachable.has(key(tile))){
-        p.turn.move = true;
-        p.turn.movedDistance = dist(p.pos, tile);
-        await movePlayerTo(p, tile);
-        enterTile(p);
-        await applyMovementTriggeredPassives(p);
-        finishAfterAction();
-      }
+    if(state.pending?.type==='move'){
+      handleMovePathClick(tile);
       return;
     }
     if(state.pending?.type==='basic' && occ && occ.id!==p.id){
@@ -3257,7 +3535,8 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function bind(){
     $('start-game').onclick = startGame;
-    $('btn-move').onclick = ()=>{ if(state.pending?.type==='discard'){ setHint(`请先弃牌至 ${handLimit()} 张。`); return; } state.pending={type:'move'}; setMode('移动模式'); render(); setHint('请选择可移动地块。'); };
+    $('btn-move').onclick = ()=>{ if(state.pending?.type==='discard'){ setHint(`请先弃牌至 ${handLimit()} 张。`); return; } state.pending={type:'move', path:[]}; setMode('移动模式'); render(); setHint('请逐格点击绘制移动路线，再点确认移动。'); };
+    if($('btn-confirm-move')) $('btn-confirm-move').onclick = confirmMovePath;
     $('btn-basic-attack').onclick = ()=>{ if(state.pending?.type==='discard'){ setHint(`请先弃牌至 ${handLimit()} 张。`); return; } state.pending={type:'basic'}; setMode('普通攻击'); render(); setHint('请选择普通攻击目标。'); };
     $('btn-passive').onclick = ()=>{ if(state.pending?.type==='discard'){ setHint(`请先弃牌至 ${handLimit()} 张。`); return; } useProfessionPassive(); };
     $('btn-cancel').onclick = ()=>{ if(state.pending?.type==='discard'){ setHint(`请先弃牌至 ${handLimit()} 张。`); return; } state.pending=null; state.selectedCardIndex=null; $('choice-panel').innerHTML=''; setMode('待机'); render(); setHint('已取消当前选择。'); };
@@ -3265,10 +3544,12 @@ async function applyRewardList(player, rewards, labelPrefix){
     $('btn-restart').onclick = ()=>location.reload();
     if ($('btn-export-battle-log')) $('btn-export-battle-log').onclick = exportBattleLog;
     if ($('btn-export-debug-log')) $('btn-export-debug-log').onclick = exportDebugBundle;
+    if ($('btn-mute')) $('btn-mute').onclick = () => setAudioMuted(!audioState.muted);
     $('ruleset-select').onchange = () => populateSetup($('ruleset-select').value);
     bindBoardZoomControls();
     bindArenaBackgroundControls();
     bindDeckTooltips();
+    initAudioSettings();
   }
   (async()=>{
     await STUDIO_RUNTIME.init();
