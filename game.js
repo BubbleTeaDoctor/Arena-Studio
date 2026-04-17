@@ -48,6 +48,149 @@
     scale: 0.92,
     duration: 420
   };
+  const SKILL_FX_DIR = 'assets/map/fx/skills/';
+  const stripFx = (name, frames, scale = 1.35, duration = 520, extra = {}) => Object.assign({
+    file: `${SKILL_FX_DIR}${name}.png`,
+    frameWidth: 64,
+    frameHeight: 64,
+    frames,
+    scale,
+    duration
+  }, extra);
+  const SKILL_TILE_FX = {
+    'fire-hit': FIRE_HIT_FX,
+    'slash-red': stripFx('slash-red', 20, 1.45, 480),
+    'slash-blue': stripFx('slash-blue', 20, 1.45, 480),
+    'bleed-red': stripFx('bleed-red', 12, 1.35, 460),
+    'stun-gold': stripFx('stun-gold', 16, 1.35, 560),
+    'ice-blue': stripFx('ice-blue', 10, 1.65, 560),
+    'root-green': stripFx('root-green', 12, 1.45, 580, { anchor: 'ground', yOffset: 18 }),
+    'heal-green': stripFx('heal-green', 12, 1.35, 560),
+    'holy-gold': stripFx('holy-gold', 13, 1.45, 580),
+    'shield-gold': stripFx('shield-gold', 15, 1.42, 620),
+    'buff-gold': stripFx('buff-gold', 14, 1.35, 560, { anchor: 'center', yOffset: -8 }),
+    'buff-red': stripFx('buff-red', 14, 1.35, 560, { anchor: 'center', yOffset: -8 }),
+    'teleport-blue': stripFx('teleport-blue', 12, 1.38, 520, { anchor: 'ground', yOffset: 18 }),
+    'teleport-purple': stripFx('teleport-purple', 12, 1.38, 520, { anchor: 'ground', yOffset: 18 }),
+    'teleport-green': stripFx('teleport-green', 12, 1.38, 520, { anchor: 'ground', yOffset: 18 }),
+    'shadow-purple': stripFx('shadow-purple', 18, 1.45, 600),
+    'dark-skull': stripFx('dark-skull', 15, 1.38, 620),
+    'bone-white': stripFx('bone-white', 15, 1.32, 600),
+    'nature-green': stripFx('nature-green', 9, 1.38, 520),
+    'earth-gold': stripFx('earth-gold', 13, 1.35, 580, { anchor: 'ground', yOffset: 14 }),
+    'wind-green': stripFx('wind-green', 8, 1.42, 520, { anchor: 'center', yOffset: -8 }),
+    'explosion-red': stripFx('explosion-red', 12, 1.55, 580),
+    'explosion-purple': stripFx('explosion-purple', 12, 1.55, 580)
+  };
+  const SKILL_PROJECTILE_FX = {
+    fire: FIRE_PROJECTILE_FX,
+    shadow: stripFx('projectile-shadow', 11, 0.95, 420, { center: true }),
+    ice: stripFx('projectile-ice', 11, 0.95, 420, { center: true }),
+    holy: stripFx('projectile-holy', 14, 0.92, 430, { center: true }),
+    nature: stripFx('projectile-nature', 14, 0.92, 430, { center: true }),
+    blue: stripFx('projectile-blue', 14, 0.9, 410, { center: true }),
+    purple: stripFx('projectile-purple', 14, 0.9, 410, { center: true })
+  };
+  const CARD_FX_PROFILES = {
+    warrior_charge: { hit: 'slash-red', anim: 'attackHeavy' },
+    warrior_rage: { self: 'buff-red', anim: 'cast' },
+    warrior_throw: { self: 'buff-gold', hit: 'slash-red', anim: 'attackCombo' },
+    warrior_execute: { hit: 'bleed-red', anim: 'attackHeavy' },
+    warrior_hamstring: { hit: 'slash-red', anim: 'attack' },
+
+    mage_fireball: { projectile: 'fire', hit: 'fire-hit', anim: 'cast' },
+    mage_nova: { area: 'ice-blue', hit: 'ice-blue', anim: 'cast' },
+    mage_blink: { teleport: 'teleport-blue', self: 'teleport-blue', anim: 'cast' },
+    mage_lightning: { hit: 'blue-lightning', anim: 'cast' },
+    mage_phase: { self: 'teleport-blue', teleport: 'teleport-blue', anim: 'cast' },
+
+    rogue_ambush: { hit: 'slash-red', anim: 'attack' },
+    rogue_disarm: { hit: 'slash-blue', anim: 'attackHeavy' },
+    rogue_assassinate: { hit: 'shadow-purple', anim: 'attackHeavy' },
+    rogue_step: { teleport: 'teleport-purple', self: 'teleport-purple', anim: 'cast' },
+    rogue_bloodmix: { self: 'bleed-red', anim: 'cast' },
+    rogue_feast: { hit: 'bleed-red', anim: 'attackCombo' },
+
+    priest_heal: { self: 'heal-green', anim: 'cast' },
+    priest_pain: { projectile: 'shadow', hit: 'dark-skull', anim: 'cast' },
+    priest_smite: { self: 'holy-gold', anim: 'cast' },
+    priest_stance: { self: 'holy-gold', anim: 'cast' },
+    priest_shield: { self: 'shield-gold', anim: 'cast' },
+    priest_sanctuary: { self: 'holy-gold', anim: 'cast' },
+    priest_judgement: { projectile: 'holy', hit: 'holy-gold', anim: 'cast' },
+    priest_holyfire: { projectile: 'holy', hit: 'holy-gold', anim: 'cast' },
+    priest_barrier: { self: 'shield-gold', anim: 'cast' },
+    priest_radiance: { self: 'holy-gold', anim: 'cast' },
+
+    shaman_shock: { projectile: 'blue', hit: 'blue-lightning', anim: 'cast' },
+    shaman_windfury: { self: 'wind-green', anim: 'cast' },
+    shaman_avatar: { self: 'nature-green', anim: 'cast' },
+    shaman_earthshield: { self: 'earth-gold', anim: 'cast' },
+    shaman_bloodlust: { self: 'buff-red', anim: 'cast' },
+    shaman_chain: { area: 'blue-lightning', hit: 'blue-lightning', anim: 'cast' },
+    shaman_spiritwalk: { teleport: 'teleport-green', self: 'teleport-green', anim: 'cast' },
+    shaman_tide: { self: 'heal-green', anim: 'cast' },
+    shaman_earthbind: { projectile: 'nature', hit: 'root-green', anim: 'cast' },
+    shaman_thunderstorm: { area: 'blue-lightning', hit: 'blue-lightning', anim: 'cast' },
+    shaman_stormstrike: { projectile: 'blue', hit: 'blue-lightning', anim: 'attackHeavy' },
+    shaman_ancestral: { self: 'holy-gold', anim: 'cast' },
+    shaman_stone_skin: { self: 'earth-gold', anim: 'cast' },
+
+    necro_bomb: { projectile: 'shadow', hit: 'dark-skull', anim: 'cast' },
+    necro_skeleton: { self: 'bone-white', anim: 'cast' },
+    necro_bonedragon: { self: 'dark-skull', anim: 'cast' },
+    necro_burst: { projectile: 'shadow', hit: 'explosion-purple', anim: 'cast' },
+    necro_shield: { self: 'bone-white', anim: 'cast' },
+    necro_spear: { projectile: 'shadow', hit: 'bone-white', anim: 'cast' },
+    necro_gravebind: { projectile: 'shadow', hit: 'root-green', anim: 'cast' },
+    necro_legion: { self: 'dark-skull', anim: 'cast' },
+    necro_deathcoil: { projectile: 'shadow', hit: 'dark-skull', anim: 'cast' },
+    necro_boneprison: { projectile: 'shadow', hit: 'bone-white', anim: 'cast' },
+    necro_harvest: { projectile: 'shadow', hit: 'dark-skull', anim: 'cast' },
+
+    lock_corrode: { projectile: 'purple', hit: 'dark-skull', anim: 'cast' },
+    lock_soulfire: { projectile: 'fire', hit: 'explosion-purple', anim: 'cast' },
+    lock_nightdash: { hit: 'shadow-purple', anim: 'attackHeavy' },
+    lock_leech: { projectile: 'shadow', hit: 'dark-skull', self: 'heal-green', anim: 'cast' },
+    lock_shadowflame: { area: 'explosion-purple', hit: 'explosion-purple', anim: 'cast' },
+    lock_bloodpact: { self: 'buff-red', anim: 'cast' },
+    lock_doom: { projectile: 'shadow', hit: 'dark-skull', anim: 'cast' },
+    lock_siphon: { projectile: 'shadow', hit: 'dark-skull', self: 'heal-green', anim: 'cast' },
+    lock_hellfire: { area: 'explosion-red', hit: 'explosion-red', anim: 'cast' },
+    lock_shadowbolt: { projectile: 'shadow', hit: 'shadow-purple', anim: 'cast' },
+    lock_demonskin: { self: 'shadow-purple', anim: 'cast' },
+    lock_agony: { projectile: 'purple', hit: 'dark-skull', anim: 'cast' },
+    lock_metamorphosis: { self: 'explosion-purple', anim: 'cast' },
+    lock_life_tap: { self: 'buff-red', anim: 'cast' },
+
+    sword_parry: { self: 'shield-gold', anim: 'cast' },
+    sword_read: { projectile: 'blue', hit: 'stun-gold', anim: 'cast' },
+    sword_flash: { hit: 'slash-blue', anim: 'attackHeavy' },
+    sword_drawdash: { teleport: 'teleport-blue', self: 'teleport-blue', anim: 'cast' },
+    sword_finish: { hit: 'slash-red', anim: 'attackCombo' },
+    sword_focus: { self: 'buff-gold', anim: 'cast' },
+    sword_riposte: { self: 'shield-gold', anim: 'cast' },
+    sword_shadowstep: { teleport: 'teleport-purple', self: 'teleport-purple', anim: 'cast' },
+
+    hunter_mark: { projectile: 'arrow', hit: 'stun-gold', anim: 'attack' },
+    hunter_aimed: { projectile: 'arrow', hit: 'slash-blue', anim: 'attack' },
+    hunter_arcane: { projectile: 'blue', hit: 'slash-blue', anim: 'attack' },
+    hunter_disengage: { teleport: 'teleport-green', self: 'teleport-green', anim: 'cast' },
+    hunter_snare: { projectile: 'arrow', hit: 'root-green', anim: 'attack' },
+    hunter_kill: { projectile: 'arrow', hit: 'bleed-red', anim: 'attack' },
+    hunter_trap: { projectile: 'arrow', hit: 'root-green', anim: 'attack' },
+    hunter_command: { projectile: 'arrow', hit: 'slash-red', anim: 'attack' },
+    hunter_volley: { projectile: 'arrow', hit: 'slash-blue', anim: 'attack' },
+    hunter_explosive: { projectile: 'fire', hit: 'explosion-red', anim: 'attack' },
+    hunter_tracking: { projectile: 'arrow', hit: 'stun-gold', anim: 'attack' },
+    hunter_camouflage: { self: 'wind-green', anim: 'cast' },
+
+    '武僧_strike': { hit: 'stun-gold', anim: 'attack' },
+    '黑虎掏心': { hit: 'bleed-red', anim: 'attackHeavy' },
+    '降龙十八掌': { hit: 'stun-gold', anim: 'attackCombo' },
+    '飞龙在天': { hit: 'stun-gold', anim: 'attackHeavy' },
+    '闪电反射': { self: 'blue-lightning', anim: 'cast' }
+  };
   const SUMMON_SPRITES = {
     skeleton: {
       frameWidth: 64,
@@ -176,7 +319,7 @@
         attack: { file: 'assets/sprites/duskborne-elf/attack.png', frames: 7, duration: 560 },
         attackHeavy: { file: 'assets/sprites/duskborne-elf/attack.png', frames: 7, duration: 640 },
         attackCombo: { file: 'assets/sprites/duskborne-elf/attack.png', frames: 7, duration: 660 },
-        cast: { file: 'assets/sprites/duskborne-elf/cast.png', frames: 8, duration: 540 },
+        cast: { file: 'assets/sprites/duskborne-elf/attack.png', frames: 7, duration: 560 },
         hurt: { file: 'assets/sprites/duskborne-elf/hurt.png', frames: 4, duration: 360 },
         death: { file: 'assets/sprites/duskborne-elf/death.png', frames: 8, duration: 860 }
       }
@@ -935,17 +1078,140 @@
     state.projectileTimers.push({ id, interval, timeout });
   }
 
-  function triggerCardVisual(cardKey, cardDef, caster, target){
-    if(!target?.pos || !caster?.pos) return;
-    const token = `${cardKey || ''} ${cardDef?.name || ''}`.toLowerCase();
-    if(token.includes('fireball') || token.includes('火球')){
-      triggerFireProjectile(caster.pos, target.pos);
-      setTimeout(() => triggerFireImpact(target.pos), Math.max(160, FIRE_PROJECTILE_FX.duration - 80));
+  function triggerSkillTileFx(name, tile){
+    if(!name || !tile) return;
+    if(name === 'blue-lightning'){
+      triggerBlueLightning(tile);
       return;
     }
-    if(token.includes('lightning') || token.includes('雷击')){
-      triggerBlueLightning(target.pos);
+    const cfg = SKILL_TILE_FX[name];
+    if(!cfg) return;
+    triggerTimedTileEffect('skill_tile_fx', tile, cfg.duration, { fx: name });
+  }
+
+  function triggerSkillProjectileFx(name, fromTile, toTile, impactName){
+    if(!name || !fromTile || !toTile) {
+      if(impactName) triggerSkillTileFx(impactName, toTile);
+      return;
     }
+    if(name === 'arrow'){
+      triggerArrowProjectile(fromTile, toTile);
+      if(impactName) setTimeout(() => triggerSkillTileFx(impactName, toTile), 260);
+      return;
+    }
+    if(name === 'fire'){
+      triggerFireProjectile(fromTile, toTile);
+      if(impactName) setTimeout(() => triggerSkillTileFx(impactName, toTile), Math.max(160, FIRE_PROJECTILE_FX.duration - 80));
+      return;
+    }
+    const cfg = SKILL_PROJECTILE_FX[name];
+    if(!cfg){
+      if(impactName) triggerSkillTileFx(impactName, toTile);
+      return;
+    }
+    const id = `${name}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const fx = { id, name: 'skill_projectile', fx: name, from: deep(fromTile), to: deep(toTile), startedAt: performance.now(), duration: cfg.duration };
+    state.projectileAnims = (state.projectileAnims || []).filter(x => performance.now() - x.startedAt < x.duration + 80);
+    state.projectileAnims.push(fx);
+    if(state.board?.length && $('board')) renderBoard();
+    const interval = setInterval(() => {
+      if(state.board?.length && $('board')) renderBoard();
+    }, 32);
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      state.projectileAnims = (state.projectileAnims || []).filter(x => x.id !== id);
+      state.projectileTimers = (state.projectileTimers || []).filter(t => t.id !== id);
+      if(state.board?.length && $('board')) renderBoard();
+    }, fx.duration + 70);
+    state.projectileTimers = state.projectileTimers || [];
+    state.projectileTimers.push({ id, interval, timeout });
+    if(impactName) setTimeout(() => triggerSkillTileFx(impactName, toTile), Math.max(120, cfg.duration - 70));
+  }
+
+  function profDefaultFx(profKey){
+    const map = {
+      warrior: { hit: 'slash-red', self: 'buff-red' },
+      mage: { projectile: 'blue', hit: 'blue-lightning', self: 'teleport-blue' },
+      rogue: { hit: 'slash-red', self: 'buff-red', teleport: 'teleport-purple' },
+      priest: { projectile: 'holy', hit: 'holy-gold', self: 'heal-green' },
+      shaman: { projectile: 'nature', hit: 'blue-lightning', self: 'nature-green', teleport: 'teleport-green' },
+      necro: { projectile: 'shadow', hit: 'dark-skull', self: 'bone-white' },
+      warlock: { projectile: 'shadow', hit: 'shadow-purple', self: 'buff-red', teleport: 'teleport-purple' },
+      swordsman: { hit: 'slash-blue', self: 'buff-gold', teleport: 'teleport-blue' },
+      hunter: { projectile: 'arrow', hit: 'slash-blue', self: 'wind-green', teleport: 'teleport-green' },
+      monk: { hit: 'stun-gold', self: 'buff-gold' },
+      '武僧': { hit: 'stun-gold', self: 'buff-gold' }
+    };
+    return map[profKey] || { hit: 'slash-red', self: 'buff-gold' };
+  }
+
+  function controlFxFromCard(cardDef){
+    const cfg = cardDef?.config || {};
+    const ctl = cfg.applyConfig?.controlType || cfg.apply?.controlType || '';
+    const template = cfg.applyTemplate || '';
+    if(ctl === 'root' || template === 'slow_status') return template === 'slow_status' ? 'ice-blue' : 'root-green';
+    if(ctl === 'slow') return 'ice-blue';
+    if(ctl === 'stun') return 'stun-gold';
+    if(ctl === 'disarm') return 'slash-blue';
+    if(ctl === 'sheep') return 'holy-gold';
+    return '';
+  }
+
+  function visualProfileForCard(cardKey, cardDef, caster){
+    const exact = CARD_FX_PROFILES[cardKey] || CARD_FX_PROFILES[cardDef?.name];
+    if(exact) return exact;
+    const cfg = cardDef?.config || {};
+    const template = cardDef?.template || '';
+    const defaults = profDefaultFx(caster?.professionKey);
+    const ctlFx = controlFxFromCard(cardDef);
+    if(template === 'teleport') return { teleport: defaults.teleport || 'teleport-blue', self: defaults.teleport || 'teleport-blue', anim: 'cast' };
+    if(template === 'self_buff' || template === 'grant_multiple_buffs' || template === 'transform_basic_attack' || template === 'summon_token_into_self_deck' || template === 'pay_life_draw_cards'){
+      return { self: defaults.self || 'buff-gold', anim: 'cast' };
+    }
+    if(template === 'create_map_token') return { area: 'teleport-purple', anim: 'cast' };
+    if(template === 'mark_target_for_bonus') return { projectile: defaults.projectile, hit: 'stun-gold', anim: 'cast' };
+    if(template === 'aoe') return { area: ctlFx || defaults.hit || 'explosion-red', hit: ctlFx || defaults.hit || 'explosion-red', anim: 'cast' };
+    if(cfg.applyTemplate === 'dot_damage_over_time'){
+      if(caster?.professionKey === 'necro' || caster?.professionKey === 'warlock') return { projectile: defaults.projectile, hit: 'dark-skull', anim: 'cast' };
+      if(caster?.professionKey === 'mage') return { projectile: 'fire', hit: 'fire-hit', anim: 'cast' };
+      return { projectile: defaults.projectile, hit: 'bleed-red', anim: 'attack' };
+    }
+    if(ctlFx) return { projectile: defaults.projectile, hit: ctlFx, anim: cfg.spell ? 'cast' : 'attack' };
+    const range = Number(cfg.range || cfg.baseRange || 1);
+    if(cfg.spell || range > 1) return { projectile: defaults.projectile, hit: defaults.hit || 'slash-blue', anim: cfg.spell ? 'cast' : 'attack' };
+    return { hit: defaults.hit || 'slash-red', anim: 'attack' };
+  }
+
+  function triggerVisualProfile(profile, caster, targetTile){
+    if(!profile || !targetTile) return;
+    const hit = profile.hit || profile.area;
+    if(profile.self && caster?.pos) setTimeout(() => triggerSkillTileFx(profile.self, caster.pos), 120);
+    if(profile.projectile && caster?.pos){
+      triggerSkillProjectileFx(profile.projectile, caster.pos, targetTile, hit);
+      return;
+    }
+    if(hit) triggerSkillTileFx(hit, targetTile);
+  }
+
+  function triggerCardVisual(cardKey, cardDef, caster, target){
+    const tile = target?.pos || target;
+    if(!tile || !caster?.pos) return;
+    const profile = visualProfileForCard(cardKey, cardDef, caster);
+    triggerVisualProfile(profile, caster, tile);
+  }
+
+  function triggerSelfCardVisual(cardKey, cardDef, caster){
+    if(!caster?.pos) return;
+    const profile = visualProfileForCard(cardKey, cardDef, caster);
+    const fxName = profile?.self || profile?.hit || profDefaultFx(caster.professionKey).self;
+    triggerSkillTileFx(fxName, caster.pos);
+  }
+
+  function triggerTeleportCardVisual(cardKey, cardDef, caster, fromTile, toTile){
+    const profile = visualProfileForCard(cardKey, cardDef, caster);
+    const fxName = profile?.teleport || profile?.self || profDefaultFx(caster?.professionKey).teleport || 'teleport-blue';
+    triggerSkillTileFx(fxName, fromTile);
+    triggerSkillTileFx(fxName, toTile);
   }
 
   function getMapToken(tile){
@@ -1250,7 +1516,10 @@
   }
 
   function cardActionAnim(player, handItem, cardDef){
-    if(cardDef?.config?.spell) return castOrRangedAnim(player);
+    const visual = visualProfileForCard(handItem?.cardKey, cardDef, player);
+    if(visual?.anim && hasSpriteAnim(player, visual.anim)) return visual.anim;
+    if(['self_buff','grant_multiple_buffs','transform_basic_attack','summon_token_into_self_deck','teleport','create_map_token'].includes(cardDef?.template)) return castOrRangedAnim(player);
+    if(cardDef?.config?.spell && Number(cardDef?.config?.range || 1) > 1) return castOrRangedAnim(player);
     if(isWeaponOrigin(handItem?.origin)) return weaponAttackAnim(player);
     const range = Number(cardDef?.config?.range || cardDef?.config?.baseRange || 1);
     if(range > 1 || cardDef?.template === 'aoe') return castOrRangedAnim(player);
@@ -2059,7 +2328,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     if (!passive) return;
     if(passive.config?.oncePerTurn && p.turn?.passiveOnceTriggered?.[passiveKey]) return;
     if (passive.template === 'life_for_card_draw_once_per_turn'){
-      playUnitAnim(p, 'cast', 620);
+      const anim = castOrRangedAnim(p);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 620));
+      triggerSkillTileFx(profDefaultFx(p.professionKey).self || 'buff-red', p.pos);
       const lifeCost = Number(passive.config?.lifeCost || 0);
       const drawCount = Number(passive.config?.drawCount || 1);
       p.hp = Math.max(0, p.hp - lifeCost);
@@ -2287,7 +2558,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     state.pending = { type:'card', index, handItem, cardDef };
     setMode(`卡牌：${cardDef.name}`);
     render();
-    if(cardDef.template==='self_buff' || cardDef.template==='summon_token_into_self_deck' || cardDef.template==='grant_multiple_buffs' || cardDef.template==='transform_basic_attack'){
+    if(cardDef.template==='self_buff' || cardDef.template==='summon_token_into_self_deck' || cardDef.template==='grant_multiple_buffs' || cardDef.template==='transform_basic_attack' || cardDef.template==='pay_life_draw_cards'){
       await resolveCard(index, handItem, cardDef, null, null);
       return;
     }
@@ -2346,6 +2617,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     p.discard.push(handItem);
 
     if(cardDef.template==='summon_token_into_self_deck'){
+      const anim = cardActionAnim(p, handItem, cardDef);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 620));
+      triggerSelfCardVisual(handItem.cardKey, cardDef, p);
       const token = cardDef.config.tokenType || 'skeleton';
       const n = Number(cardDef.config.insertCount || 1);
       p.summons[token] = (p.summons[token] || 0) + n;
@@ -2357,7 +2631,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='self_buff'){
-      playUnitAnim(p, 'cast', 620);
+      const anim = cardActionAnim(p, handItem, cardDef);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 620));
+      triggerSelfCardVisual(handItem.cardKey, cardDef, p);
       if(cardDef.config.heal){
         const heal = typeof cardDef.config.heal==='string' && cardDef.config.heal.includes('d') ? await showDice('治疗', cardDef.config.heal) : Number(cardDef.config.heal||0);
         p.hp = Math.min(p.maxHp, p.hp + heal);
@@ -2394,7 +2670,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='grant_multiple_buffs'){
-      playUnitAnim(p, 'cast', 620);
+      const anim = cardActionAnim(p, handItem, cardDef);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 620));
+      triggerSelfCardVisual(handItem.cardKey, cardDef, p);
       await applyRewardList(p, cardDef.config.rewardList || [], cardDef.name);
       if(cardDef.config.consumeOn === 'next_spell_hit') p.buffs.spellImmune = true;
       log(`${p.label} 使用了 ${cardDef.name}，直接获得多个增益。当前生命 ${p.hp}，格挡 ${p.block}。`);
@@ -2403,7 +2681,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='transform_basic_attack'){
-      playUnitAnim(p, 'cast', 620);
+      const anim = cardActionAnim(p, handItem, cardDef);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 620));
+      triggerSelfCardVisual(handItem.cardKey, cardDef, p);
       p.buffs.basicTransform = {
         consumeOn: cardDef.config.consumeOn || 'next_basic_attack',
         durationTurns: Number(cardDef.config.durationTurns || 1),
@@ -2423,8 +2703,30 @@ async function applyRewardList(player, rewards, labelPrefix){
       return;
     }
 
+    if(cardDef.template==='pay_life_draw_cards'){
+      const anim = cardActionAnim(p, handItem, cardDef);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 620));
+      triggerSelfCardVisual(handItem.cardKey, cardDef, p);
+      const lifeCost = Number(cardDef.config?.lifeCost || 0);
+      const drawCount = Number(cardDef.config?.drawCount || 1);
+      p.hp = Math.max(0, p.hp - lifeCost);
+      log(`${p.label} 使用 ${cardDef.name}，支付 ${lifeCost} 生命并抽 ${drawCount} 张牌。`);
+      if(p.hp <= 0){
+        finalizePlayerState(p);
+        finishAfterAction();
+        return;
+      }
+      drawCards(p, drawCount);
+      ensureHandLimit(p);
+      finishAfterAction();
+      return;
+    }
+
     if(cardDef.template==='teleport' && tile){
-      playUnitAnim(p, 'cast', 520);
+      const anim = cardActionAnim(p, handItem, cardDef);
+      const fromTile = deep(p.pos);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 520));
+      triggerTeleportCardVisual(handItem.cardKey, cardDef, p, fromTile, tile);
       p.turn.move = true;
       p.turn.movedDistance = dist(p.pos, tile);
       p.pos = deep(tile);
@@ -2435,7 +2737,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='create_map_token' && tile){
-      playUnitAnim(p, 'cast', 520);
+      const anim = cardActionAnim(p, handItem, cardDef);
+      playUnitAnim(p, anim, spriteAnimDuration(p, anim, 520));
+      triggerSkillTileFx(visualProfileForCard(handItem.cardKey, cardDef, p).area || 'teleport-purple', tile);
       createMapTokenFromCard(p, tile, cardDef);
       finishAfterAction();
       return;
@@ -2459,6 +2763,9 @@ async function applyRewardList(player, rewards, labelPrefix){
         if(adj){ await movePlayerTo(p, adj, { duration: 340, triggerDestinationEffects: true }); }
       }
       if(cardDef.template==='mark_target_for_bonus'){
+        const cardAnim = cardActionAnim(p, handItem, cardDef);
+        playUnitAnim(p, cardAnim, spriteAnimDuration(p, cardAnim, 520));
+        triggerCardVisual(handItem.cardKey, cardDef, p, target);
         target.marked = true;
         log(`${p.label} 使用 ${cardDef.name} 标记了 ${target.label}。`);
         finishAfterAction();
@@ -2524,11 +2831,12 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
 
     if(cardDef.template==='aoe' && tile){
+      const cardAnim = cardActionAnim(p, handItem, cardDef);
+      playUnitAnim(p, cardAnim, spriteAnimDuration(p, cardAnim, 620));
+      triggerCardVisual(handItem.cardKey, cardDef, p, tile);
       const targets = state.players.filter(x=>x.alive && x.id!==p.id && dist(x.pos,tile)<=Number(cardDef.config.radius||1));
       for(const target of targets){
         let dmg = await showDice(cardDef.name, resolvePlayerNotation(p, cardDef.config.damage));
-        const cardAnim = cardActionAnim(p, handItem, cardDef);
-        triggerCardVisual(handItem.cardKey, cardDef, p, target);
         const damageResult = dealDamage(p, target, dmg, { sourceName: cardDef.name, anim: cardAnim, spell: !!cardDef.config?.spell });
         if(!damageResult.dodged) applySourceOnHitEffects(p, target, cardDef.config || {}, cardDef.name);
         log(`${p.label} 的 ${cardDef.name} 命中 ${target.label}，原始伤害 ${dmg}，实际伤害 ${damageResult.finalDamage}，目标当前生命 ${target.hp}，格挡 ${target.block}。`);
@@ -2705,6 +3013,11 @@ async function applyRewardList(player, rewards, labelPrefix){
     const displayW = cfg.frameWidth * cfg.scale;
     const displayH = cfg.frameHeight * cfg.scale;
     const g = addSvg(layer, 'g', { class:`map-component ${className}-component`, transform:`translate(${x} ${y})` });
+    const anchorY = cfg.anchor === 'ground'
+      ? -displayH / 2 + Number(cfg.yOffset || 0)
+      : cfg.anchor === 'center'
+        ? -displayH / 2 + Number(cfg.yOffset || 0)
+        : -displayH + Number(cfg.yOffset ?? 8);
     appendNativeSprite(g, {
       file: cfg.file,
       frameWidth: cfg.frameWidth,
@@ -2715,9 +3028,9 @@ async function applyRewardList(player, rewards, labelPrefix){
       sheetHeight: cfg.frameHeight,
       scale: cfg.scale,
       x: -displayW / 2,
-      y: -displayH + 8,
+      y: anchorY,
       className: `sprite-frame-svg ${className}-frame`,
-      imageClass: `sprite-sheet-image ${className}-image`
+      imageClass: `sprite-sheet-image ${className}-image skill-fx-image`
     });
   }
 
@@ -2731,6 +3044,29 @@ async function applyRewardList(player, rewards, labelPrefix){
     const y = from.y + (to.y - from.y) * t - 34;
     const angle = Math.atan2(to.y - from.y, to.x - from.x) * 180 / Math.PI;
     const g = addSvg(layer, 'g', { class:'arrow-projectile-component', transform:`translate(${x} ${y}) rotate(${angle})` });
+    if(fxState.name === 'skill_projectile'){
+      const cfg = SKILL_PROJECTILE_FX[fxState.fx];
+      if(!cfg) return;
+      const frameMs = cfg.duration / Math.max(1, cfg.frames || 1);
+      const frameIndex = Math.min((cfg.frames || 1) - 1, Math.floor((performance.now() - fxState.startedAt) / frameMs));
+      const displayW = cfg.frameWidth * cfg.scale;
+      const displayH = cfg.frameHeight * cfg.scale;
+      appendNativeSprite(g, {
+        file: cfg.file,
+        frameWidth: cfg.frameWidth,
+        frameHeight: cfg.frameHeight,
+        frames: 1,
+        frameIndex,
+        sheetWidth: cfg.frameWidth * cfg.frames,
+        sheetHeight: cfg.frameHeight,
+        scale: cfg.scale,
+        x: -displayW / 2,
+        y: -displayH / 2,
+        className: `sprite-frame-svg skill-projectile-frame skill-projectile-${fxState.fx}-frame`,
+        imageClass: `sprite-sheet-image skill-projectile-image skill-projectile-${fxState.fx}-image`
+      });
+      return;
+    }
     if(fxState.name === 'fire_projectile'){
       const cfg = FIRE_PROJECTILE_FX;
       const frameMs = cfg.duration / Math.max(1, cfg.frames || 1);
@@ -2832,6 +3168,10 @@ async function applyRewardList(player, rewards, labelPrefix){
     const layer = addSvg(svg, 'g', { class:'hazard-fx-layer' });
     state.mapHazardAnims.forEach(fxState => {
       if(fxState.name === 'fire_hit') renderStripTileEffect(layer, fxState, FIRE_HIT_FX, 'fire-hit-fx');
+      else if(fxState.name === 'skill_tile_fx'){
+        const cfg = SKILL_TILE_FX[fxState.fx];
+        if(cfg) renderStripTileEffect(layer, fxState, cfg, `skill-fx-${fxState.fx}`);
+      }
       else renderLightningEffect(layer, fxState);
     });
     (state.projectileAnims || []).forEach(fxState => renderProjectileEffect(layer, fxState));

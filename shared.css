@@ -282,7 +282,7 @@ body.game-theme{
 .game-theme .tile text{font-size:13px;font-weight:800;fill:#f9edc5;paint-order:stroke;stroke:#080a08;stroke-width:4px}
 .map-component-layer,.map-component{pointer-events:none}
 .map-component-shadow{fill:rgba(0,0,0,.42)}
-.spike-floor-sprite,.black-hole-fx,.center-trap-image,.magic-trap-image,.arrow-trap-image,.mark-fx-image,.summon-sprite-image,.arrow-projectile,.fire-hit-fx-image,.fire-projectile-image,.lightning-fx-image{image-rendering:pixelated}
+.spike-floor-sprite,.black-hole-fx,.center-trap-image,.magic-trap-image,.arrow-trap-image,.mark-fx-image,.summon-sprite-image,.arrow-projectile,.fire-hit-fx-image,.fire-projectile-image,.lightning-fx-image,.skill-fx-image,.skill-projectile-image{image-rendering:pixelated}
 .spike-floor-sprite{filter:drop-shadow(0 4px 0 rgba(0,0,0,.35)) drop-shadow(0 0 7px rgba(255,86,86,.32))}
 .obelisk-sprite-frame{overflow:hidden;filter:drop-shadow(0 6px 0 rgba(0,0,0,.42)) drop-shadow(0 0 10px rgba(0,235,255,.24))}
 .obelisk-shadow{fill:rgba(0,0,0,.5)}
@@ -291,6 +291,13 @@ body.game-theme{
 .blue-lightning-fx-frame{filter:drop-shadow(0 0 11px rgba(72,202,255,.9)) drop-shadow(0 0 20px rgba(55,122,255,.55))}
 .fire-hit-fx-frame{overflow:hidden;filter:drop-shadow(0 0 10px rgba(255,56,39,.86)) drop-shadow(0 0 18px rgba(255,151,55,.55))}
 .fire-projectile-frame{overflow:hidden;filter:drop-shadow(0 0 9px rgba(255,82,42,.9)) drop-shadow(0 0 16px rgba(255,189,75,.56))}
+.skill-fx-image,.skill-projectile-image{filter:drop-shadow(0 0 9px rgba(239,196,110,.36))}
+.skill-projectile-frame{overflow:hidden}
+.skill-fx-blue-lightning-frame,.skill-fx-ice-blue-frame,.skill-projectile-blue-frame,.skill-projectile-ice-frame{filter:drop-shadow(0 0 10px rgba(72,202,255,.82)) drop-shadow(0 0 18px rgba(55,122,255,.42))}
+.skill-fx-heal-green-frame,.skill-fx-root-green-frame,.skill-fx-nature-green-frame,.skill-fx-wind-green-frame,.skill-projectile-nature-frame{filter:drop-shadow(0 0 10px rgba(105,230,140,.74)) drop-shadow(0 0 16px rgba(80,180,120,.38))}
+.skill-fx-shadow-purple-frame,.skill-fx-dark-skull-frame,.skill-fx-explosion-purple-frame,.skill-projectile-shadow-frame,.skill-projectile-purple-frame{filter:drop-shadow(0 0 10px rgba(180,88,255,.82)) drop-shadow(0 0 18px rgba(94,42,180,.42))}
+.skill-fx-bleed-red-frame,.skill-fx-slash-red-frame,.skill-fx-buff-red-frame,.skill-fx-explosion-red-frame{filter:drop-shadow(0 0 10px rgba(255,78,67,.8)) drop-shadow(0 0 17px rgba(188,42,38,.42))}
+.skill-fx-holy-gold-frame,.skill-fx-shield-gold-frame,.skill-fx-stun-gold-frame,.skill-fx-buff-gold-frame,.skill-projectile-holy-frame{filter:drop-shadow(0 0 10px rgba(255,218,128,.78)) drop-shadow(0 0 18px rgba(239,166,72,.42))}
 .center-trap-frame{overflow:hidden;filter:drop-shadow(0 8px 0 rgba(0,0,0,.46)) drop-shadow(0 0 14px rgba(255,75,26,.74))}
 .center-trap-shadow{fill:rgba(0,0,0,.52)}
 .magic-trap-frame{overflow:hidden;filter:drop-shadow(0 4px 0 rgba(0,0,0,.38)) drop-shadow(0 0 10px rgba(136,88,255,.62))}
