@@ -1614,6 +1614,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     hideDeckTooltip();
     document.body.classList.add('battle-running');
     relocateLanguageControls();
+    syncArenaScreenBackdrop();
     const rulesetId = $('ruleset-select').value;
     state.ruleset = deep(STUDIO_RUNTIME.findRuleset(rulesetId));
     normalizeRulesetForBattle(state.ruleset);
@@ -1661,6 +1662,11 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(!lang || !toolbar || toolbar.contains(lang)) return;
     lang.classList.add('battle-lang-bar');
     toolbar.appendChild(lang);
+  }
+
+  function syncArenaScreenBackdrop(){
+    const url = state.customArenaBackdropUrl || MAP_ASSETS.arenaBackdrop;
+    document.body.style.setProperty('--arena-screen-backdrop', `url("${url}")`);
   }
 
   async function startTurn(){
@@ -2969,6 +2975,16 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
     const label = $('board-zoom-label');
     if(label) label.textContent = `${Math.round(state.boardZoom * 100)}%`;
+    centerBoardViewport();
+  }
+
+  function centerBoardViewport(){
+    const wrap = $('board-wrap');
+    if(!wrap) return;
+    requestAnimationFrame(() => {
+      const overflowX = wrap.scrollWidth - wrap.clientWidth;
+      if(overflowX > 2) wrap.scrollLeft = Math.round(overflowX / 2);
+    });
   }
 
   function fitBoardZoom(){
@@ -2979,10 +2995,11 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
     const wrapRect = wrap.getBoundingClientRect();
     const availableW = Math.max(360, wrap.clientWidth - 18);
-    const handReserve = window.innerWidth < 720 ? 160 : 118;
+    const handReserve = window.innerWidth < 720 ? 154 : 118;
     const availableH = Math.max(300, window.innerHeight - wrapRect.top - handReserve);
     const fitted = Math.min(availableW / BOARD_VIEW.width, availableH / BOARD_VIEW.height);
-    const preferredMin = window.innerWidth >= 1500 ? 0.56 : window.innerWidth >= 1000 ? 0.52 : window.innerWidth >= 720 ? 0.46 : 0.32;
+    const compactLandscape = window.innerHeight <= 520 && window.innerWidth > window.innerHeight;
+    const preferredMin = compactLandscape ? 0.34 : window.innerWidth >= 1500 ? 0.82 : window.innerWidth >= 1000 ? 0.68 : window.innerWidth >= 720 ? 0.54 : window.innerWidth >= 520 ? 0.38 : 0.32;
     const fit = Math.max(preferredMin, fitted);
     setBoardZoom(fit, true);
   }
@@ -3006,6 +3023,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(state.customArenaBackdropUrl) URL.revokeObjectURL(state.customArenaBackdropUrl);
     state.customArenaBackdropUrl = URL.createObjectURL(file);
     state.customArenaBackdropName = file.name || '';
+    syncArenaScreenBackdrop();
     const label = $('arena-bg-name');
     if(label) label.textContent = state.customArenaBackdropName || '本地背景';
     if(state.board?.length && $('board')) renderBoard();
@@ -3015,6 +3033,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(state.customArenaBackdropUrl) URL.revokeObjectURL(state.customArenaBackdropUrl);
     state.customArenaBackdropUrl = null;
     state.customArenaBackdropName = '';
+    syncArenaScreenBackdrop();
     const input = $('arena-bg-input');
     if(input) input.value = '';
     const label = $('arena-bg-name');
