@@ -14,10 +14,22 @@
     voidFx: 'assets/map/void-fx.png',
     centerTrap: 'assets/map/traps/fire-trap-level-3.png',
     magicTrap: 'assets/map/traps/magic-trap-level-2.png',
-    arrowTrap: 'assets/map/traps/arrow-trap-level-2.png',
+    arrowTrap: 'assets/map/traps/arrow-trap-idle.png',
     arrowProjectile: 'assets/map/traps/arrow.png',
     markFx: 'assets/map/fx/mark-red-row.png'
   };
+  const AUDIO_ASSETS = {
+    bgm: ['assets/audio/bgm-twilight-battle.ogg', 'assets/audio/bgm-twilight-battle.wav'],
+    meleeAttack: ['assets/audio/attack-melee.ogg', 'assets/audio/attack-melee.wav'],
+    meleeHit: ['assets/audio/hit-melee.ogg', 'assets/audio/hit-melee.wav'],
+    bowAttack: ['assets/audio/attack-bow.ogg', 'assets/audio/attack-bow.wav'],
+    bowHit: ['assets/audio/hit-bow.ogg', 'assets/audio/hit-bow.wav'],
+    cast: ['assets/audio/cast-spell.ogg', 'assets/audio/cast-spell.wav'],
+    spellImpact: ['assets/audio/spell-impact.ogg', 'assets/audio/spell-impact.wav'],
+    trap: ['assets/audio/trap-trigger.ogg', 'assets/audio/trap-trigger.wav']
+  };
+  const audioState = { bgm: null, unlocked: false };
+  const audioSourceCache = {};
   const LIGHTNING_FRAMES = Array.from({ length: 14 }, (_, i) => `assets/map/fx/lightning/frame-${i}.png`);
   const SUMMON_SPRITES = {
     skeleton: {
@@ -285,6 +297,65 @@
     debugLog: [],
   };
   const I18N = () => window.STUDIO_I18N || { t:(k,f)=>f||k, entity:(type,key,fb)=>fb||key, getLang:()=> 'zh' };
+
+  function audioMimeFor(src){
+    if(String(src).endsWith('.ogg')) return 'audio/ogg; codecs="vorbis"';
+    if(String(src).endsWith('.wav')) return 'audio/wav';
+    if(String(src).endsWith('.mp3')) return 'audio/mpeg';
+    return '';
+  }
+
+  function resolveAudioSource(name){
+    if(audioSourceCache[name]) return audioSourceCache[name];
+    const raw = AUDIO_ASSETS[name];
+    const sources = Array.isArray(raw) ? raw : [raw].filter(Boolean);
+    let chosen = sources[0] || '';
+    try{
+      const probe = document.createElement('audio');
+      const playable = sources.find(src => {
+        const mime = audioMimeFor(src);
+        return !mime || !!probe.canPlayType(mime);
+      });
+      if(playable) chosen = playable;
+    } catch (_) {}
+    audioSourceCache[name] = chosen;
+    return chosen;
+  }
+
+  function playSfx(name, volume = 0.55){
+    const src = resolveAudioSource(name);
+    if(!src) return;
+    try{
+      const a = new Audio(src);
+      a.volume = Math.max(0, Math.min(1, volume));
+      a.play().catch(() => {});
+    } catch (_) {}
+  }
+
+  function playAttackSfx(attacker){
+    const basic = attacker ? getActiveBasicAttack(attacker) : null;
+    const ranged = (basic && Number(basic.range || 1) > 1) || weaponPresentation(attacker || {}).kind === 'bow';
+    playSfx(ranged ? 'bowAttack' : 'meleeAttack', ranged ? 0.48 : 0.5);
+  }
+
+  function playHitSfx(attacker, spell = false){
+    if(spell) return playSfx('spellImpact', 0.55);
+    const basic = attacker ? getActiveBasicAttack(attacker) : null;
+    const ranged = (basic && Number(basic.range || 1) > 1) || weaponPresentation(attacker || {}).kind === 'bow';
+    playSfx(ranged ? 'bowHit' : 'meleeHit', ranged ? 0.46 : 0.52);
+  }
+
+  function startBattleAudio(){
+    audioState.unlocked = true;
+    try{
+      if(!audioState.bgm){
+        audioState.bgm = new Audio(resolveAudioSource('bgm'));
+        audioState.bgm.loop = true;
+        audioState.bgm.volume = 0.22;
+      }
+      audioState.bgm.play().catch(() => {});
+    } catch (_) {}
+  }
 
   const R = 9, SIZE = 48, CX = Math.round(SIZE*Math.sqrt(3)*(R+2)), CY = Math.round(SIZE*1.5*(R+2));
   const BOARD_TILT = { yScale: 0.82 };
@@ -929,6 +1000,7 @@
       unit.anim = 'attack';
       unit.animUntil = now + (summonSpriteFor(type).animations.attack.duration || 500);
     });
+    playSfx(type === 'bone_dragon' ? 'spellImpact' : 'meleeAttack', type === 'bone_dragon' ? 0.5 : 0.42);
     if(state.board?.length && $('board')) renderBoard();
     const duration = summonSpriteFor(type).animations.attack.duration || 500;
     setTimeout(() => {
@@ -951,10 +1023,12 @@
     log(`${targetPlayer.label} 的牌库被加入了 ${cnt} 张负面牌。`);
   }
 
-  function triggerMapTokenOnEnter(player){
-    const tok = getMapToken(player.pos);
+  function triggerMapTokenOnEnter(player, pos = player.pos){
+    const tilePos = pos || player.pos;
+    const tok = getMapToken(tilePos);
     if (!tok || tok.ownerId === player.id) return;
     if (tok.kind === 'trap_once_negative'){
+      playSfx('trap', 0.5);
       if (tok.damage) {
         const dmg = loggedRoll(`${player.label} ${tok.name || '陷阱'}伤害`, resolvePlayerNotation(player, tok.damage));
         takePureDamage(player, dmg);
@@ -962,7 +1036,7 @@
       }
       if (tok.insertCardKey) insertNegativeCardsToDeck(player, tok.insertCardKey, tok.insertCount || 1);
       applyTokenControl(player, tok);
-      state.mapTokens.delete(key(player.pos));
+      state.mapTokens.delete(key(tilePos));
       return;
     }
   }
@@ -978,11 +1052,13 @@
           .sort((a,b) => dist(tok.pos, a.pos) - dist(tok.pos, b.pos))[0];
         if (target){
           triggerArrowProjectile(tok.pos, target.pos);
+          playSfx('bowAttack', 0.45);
           if (tok.damage){
             const dmg = loggedRoll(`${tok.name || '炮塔'} 攻击`, resolvePlayerNotation(player, tok.damage));
             const finalDamage = Math.max(0, dmg - target.block);
             target.hp -= finalDamage;
             target.block = Math.max(0, target.block - dmg);
+            if (dmg > 0) playSfx('bowHit', 0.45);
             if (finalDamage > 0){
               if (target.hp <= 0) finalizePlayerState(target);
               else playUnitAnim(target, 'hurt', 460);
@@ -1115,6 +1191,58 @@ function canOccupyTileForReactiveMove(tile){
   return !!tile && state.boardMap.has(key(tile)) && !getPlayerAt(tile) && !isBlockedTile(tile);
 }
 
+function canPathThroughTile(tile, player){
+  if(!tile || !state.boardMap.has(key(tile)) || isBlockedTile(tile)) return false;
+  const occ = getPlayerAt(tile);
+  return !occ || occ.id === player?.id;
+}
+
+function shortestMovementPath(from, to, player){
+  if(!from || !to) return [];
+  const startKey = key(from);
+  const goalKey = key(to);
+  if(startKey === goalKey) return [];
+  const queue = [deep(from)];
+  const prev = new Map([[startKey, null]]);
+  while(queue.length){
+    const cur = queue.shift();
+    if(key(cur) === goalKey) break;
+    for(const next of neighbors(cur)){
+      const kk = key(next);
+      if(prev.has(kk)) continue;
+      if(kk !== goalKey && !canPathThroughTile(next, player)) continue;
+      if(kk === goalKey && !canPathThroughTile(next, player)) continue;
+      prev.set(kk, cur);
+      queue.push(next);
+    }
+  }
+  if(!prev.has(goalKey)) return [deep(to)];
+  const path = [];
+  let cur = deep(to);
+  while(cur && key(cur) !== startKey){
+    path.unshift(deep(cur));
+    cur = prev.get(key(cur));
+  }
+  return path;
+}
+
+function resolveMovementTouchEffects(player, from, to, includeDestination = false){
+  const path = shortestMovementPath(from, to, player);
+  const limit = includeDestination ? path.length : Math.max(0, path.length - 1);
+  const seen = new Set();
+  for(let i = 0; i < limit; i += 1){
+    const tile = path[i];
+    const kk = key(tile);
+    if(seen.has(kk)) continue;
+    seen.add(kk);
+    enterTile(player, tile);
+    if(!player.alive){
+      player.pos = deep(tile);
+      break;
+    }
+  }
+}
+
 function getRandomReactiveMoveDestination(player, maxDistance){
   const groups = [];
   const stepLimit = Number(maxDistance || 0) > 0 ? Number(maxDistance || 0) : 99;
@@ -1140,7 +1268,7 @@ function attemptReactiveMove(player, triggerLabel){
     return false;
   }
   const from = key(player.pos);
-  movePlayerTo(player, dst, { duration: 260 });
+  movePlayerTo(player, dst, { duration: 260, triggerDestinationEffects: true });
   log(`${player.label} 因 ${triggerLabel || '反应位移'} 随机移动：${from} → ${key(dst)}。`);
   return true;
 }
@@ -1241,6 +1369,7 @@ function movePlayerTo(player, tile, opts = {}){
       if(player.moveAnimTimer?.interval === interval) clearInterval(interval);
       if(player.moveAnimTimer?.timeout === timeout) clearTimeout(timeout);
       if(player.moveAnimTimer?.interval === interval) player.moveAnimTimer = null;
+      if(opts.triggerPathEffects !== false) resolveMovementTouchEffects(player, from, to, !!opts.triggerDestinationEffects);
       if(state.board?.length && $('board')) renderBoard();
       resolve(true);
     };
@@ -1257,6 +1386,7 @@ function playUnitAnim(player, anim, duration){
   if(player.animTimer) clearTimeout(player.animTimer);
   player.anim = anim || 'idle';
   const animDuration = Number(duration || spriteAnimDuration(player, player.anim, 520));
+  if(player.anim === 'cast') playSfx('cast', 0.42);
   if(state.board?.length && $('board')) renderBoard();
   player.animTimer = setTimeout(() => {
     player.anim = 'idle';
@@ -1320,6 +1450,7 @@ function applyDamageTakenTriggeredPassives(player, finalDamage, sourceName){
 function takePureDamage(player, rawDamage){
   const damage = Math.max(0, Number(rawDamage || 0));
   if(!player || !player.alive || damage <= 0) return 0;
+  playSfx('meleeHit', 0.36);
   player.hp -= damage;
   applyDamageTakenTriggeredPassives(player, damage, '受伤');
   if(player.hp <= 0) finalizePlayerState(player);
@@ -1333,9 +1464,12 @@ function dealDamage(attacker, target, rawDamage, meta){
   const allowReactions = info.allowReactions !== false;
   let damage = Math.max(0, Number(rawDamage || 0));
   if (!target || !target.alive) return { rawDamage: damage, blocked: 0, finalDamage: 0, dodged: false };
+  let attackAnim = null;
   if(attacker && attacker !== target){
     setFacingToward(attacker, target.pos);
-    playUnitAnim(attacker, info.anim || weaponAttackAnim(attacker));
+    attackAnim = info.anim || weaponAttackAnim(attacker);
+    playUnitAnim(attacker, attackAnim);
+    if(attackAnim !== 'cast') playAttackSfx(attacker);
   }
 
   if (damage > 0 && (target.buffs?.dodgeNextDamage || 0) > 0) {
@@ -1348,6 +1482,7 @@ function dealDamage(attacker, target, rawDamage, meta){
   const finalDamage = Math.max(0, damage - blocked);
   target.block = Math.max(0, Number(target.block || 0) - damage);
   target.hp -= finalDamage;
+  if(damage > 0) playHitSfx(attacker, attackAnim === 'cast' || info.spell === true);
 
   if (allowReactions && finalDamage > 0) {
     applyDamageTakenTriggeredPassives(target, finalDamage, sourceName);
@@ -1612,6 +1747,7 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function startGame(){
     hideDeckTooltip();
+    startBattleAudio();
     document.body.classList.add('battle-running');
     relocateLanguageControls();
     syncArenaScreenBackdrop();
@@ -1726,18 +1862,44 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
   }
 
-  function enterTile(player){
-    const t = state.boardMap.get(key(player.pos)); if(!t) return;
-    if(isSpikeDangerTile(player.pos)){ triggerObeliskLightning(player.pos); const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 触碰飞行方尖碑危险区域，受到 ${dmg} 伤害。`); }
-    if(isTokenDangerTile(player.pos)){ const tok = getMapToken(player.pos) || neighbors(player.pos).map(getMapToken).find(Boolean); const expr = tok?.damage || '2d8'; const dmg = loggedRoll(`${player.label} ${tok?.name || '危险区'}伤害`, resolvePlayerNotation(player, expr)); takePureDamage(player, dmg); log(`${player.label} 触碰 ${tok?.name || '危险区'}，受到 ${dmg} 伤害。`); }
-    if(isBlackHoleEnabled() && t.type==='center'){ const dmg = loggedRoll(`${player.label} 黑洞中心伤害`, '2d8'); takePureDamage(player, dmg); log(`${player.label} 被黑洞中心撕扯，受到 ${dmg} 伤害。`); }
-    const trap = state.traps.get(key(player.pos));
+  function enterTile(player, pos = player.pos){
+    if(!player || !player.alive) return;
+    const tilePos = deep(pos || player.pos);
+    const tileKey = key(tilePos);
+    const t = state.boardMap.get(tileKey); if(!t) return;
+    if(isSpikeDangerTile(tilePos)){
+      playSfx('trap', 0.55);
+      triggerObeliskLightning(tilePos);
+      const dmg = loggedRoll(`${player.label} 尖刺区域伤害`, '2d8');
+      takePureDamage(player, dmg);
+      log(`${player.label} 触碰飞行方尖碑危险区域，受到 ${dmg} 伤害。`);
+      if(!player.alive) return;
+    }
+    if(isTokenDangerTile(tilePos)){
+      const tok = getMapToken(tilePos) || neighbors(tilePos).map(getMapToken).find(Boolean);
+      const expr = tok?.damage || '2d8';
+      playSfx('trap', 0.55);
+      const dmg = loggedRoll(`${player.label} ${tok?.name || '危险区'}伤害`, resolvePlayerNotation(player, expr));
+      takePureDamage(player, dmg);
+      log(`${player.label} 触碰 ${tok?.name || '危险区'}，受到 ${dmg} 伤害。`);
+      if(!player.alive) return;
+    }
+    if(isBlackHoleEnabled() && t.type==='center'){
+      playSfx('trap', 0.55);
+      const dmg = loggedRoll(`${player.label} 黑洞中心伤害`, '2d8');
+      takePureDamage(player, dmg);
+      log(`${player.label} 被黑洞中心撕扯，受到 ${dmg} 伤害。`);
+      if(!player.alive) return;
+    }
+    const trap = state.traps.get(tileKey);
     if(trap && trap.ownerId !== player.id){
+      playSfx('trap', 0.55);
       const dmg = loggedRoll(`${player.label} 陷阱伤害`, '2d6'); takePureDamage(player, dmg); player.statuses.slow = 1;
       log(`${player.label} 触发陷阱，受到 ${dmg} 伤害并减速。`);
-      state.traps.delete(key(player.pos));
+      state.traps.delete(tileKey);
+      if(!player.alive) return;
     }
-    triggerMapTokenOnEnter(player);
+    triggerMapTokenOnEnter(player, tilePos);
     if(player.hp<=0){ player.hp=0; player.alive=false; state.winner = enemyOf(player)?.id || 1; }
   }
 
@@ -2073,7 +2235,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       }
       if(cardDef.template==='dash_hit'){
         const adj = neighbors(target.pos).filter(c=>state.boardMap.has(key(c)) && !getPlayerAt(c)).sort((a,b)=>dist(p.pos,a)-dist(p.pos,b))[0];
-        if(adj){ await movePlayerTo(p, adj, { duration: 340 }); }
+        if(adj){ await movePlayerTo(p, adj, { duration: 340, triggerDestinationEffects: true }); }
       }
       if(cardDef.template==='mark_target_for_bonus'){
         target.marked = true;
@@ -2358,10 +2520,10 @@ async function applyRewardList(player, rewards, labelPrefix){
         file: MAP_ASSETS.arrowTrap,
         frameWidth: 32,
         frameHeight: 32,
-        frames: 81,
+        frames: 1,
         scale: 1.78,
         duration: 1100,
-        loop: true,
+        loop: false,
         x: x - 28,
         y: y - 40,
         className: 'sprite-frame-svg arrow-trap-frame',
