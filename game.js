@@ -185,16 +185,16 @@
       }
     },
     'fire-warrior': {
-      frameWidth: 72, frameHeight: 80, scale: 1.55, footOffset: 24,
+      frameWidth: 144, frameHeight: 80, scale: 1.55, footOffset: 24,
       animations: {
-        idle: { file: 'assets/sprites/fire-warrior/idle.png', frames: 16, duration: 1050, loop: true },
-        run: { file: 'assets/sprites/fire-warrior/run.png', frames: 16, duration: 760, loop: true },
-        attack: { file: 'assets/sprites/fire-warrior/attack.png', frames: 8, duration: 560 },
-        attackHeavy: { file: 'assets/sprites/fire-warrior/attack-heavy.png', frames: 8, duration: 620 },
-        attackCombo: { file: 'assets/sprites/fire-warrior/attack-heavy.png', frames: 8, duration: 660 },
-        cast: { file: 'assets/sprites/fire-warrior/cast.png', frames: 18, duration: 760 },
-        hurt: { file: 'assets/sprites/fire-warrior/hurt.png', frames: 8, duration: 360 },
-        death: { file: 'assets/sprites/fire-warrior/death.png', frames: 22, duration: 900 }
+        idle: { file: 'assets/sprites/fire-warrior/idle.png', frames: 8, duration: 1050, loop: true },
+        run: { file: 'assets/sprites/fire-warrior/run.png', frames: 8, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/fire-warrior/attack.png', frames: 4, duration: 560 },
+        attackHeavy: { file: 'assets/sprites/fire-warrior/attack-heavy.png', frames: 4, duration: 620 },
+        attackCombo: { file: 'assets/sprites/fire-warrior/attack-heavy.png', frames: 4, duration: 660 },
+        cast: { file: 'assets/sprites/fire-warrior/cast.png', frames: 9, duration: 760 },
+        hurt: { file: 'assets/sprites/fire-warrior/hurt.png', frames: 4, duration: 360 },
+        death: { file: 'assets/sprites/fire-warrior/death.png', frames: 11, duration: 900 }
       }
     },
     ninja: {
@@ -1612,6 +1612,8 @@ async function applyRewardList(player, rewards, labelPrefix){
 
   function startGame(){
     hideDeckTooltip();
+    document.body.classList.add('battle-running');
+    relocateLanguageControls();
     const rulesetId = $('ruleset-select').value;
     state.ruleset = deep(STUDIO_RUNTIME.findRuleset(rulesetId));
     normalizeRulesetForBattle(state.ruleset);
@@ -1651,6 +1653,14 @@ async function applyRewardList(player, rewards, labelPrefix){
     log(isBlackHoleEnabled() ? '对局开始。黑洞每回合将所有单位向中心牵引 1 格。' : '对局开始。黑洞已关闭。');
     startTurn();
     setTimeout(fitBoardZoom, 0);
+  }
+
+  function relocateLanguageControls(){
+    const lang = document.querySelector('.lang-bar');
+    const toolbar = document.querySelector('.battle-toolbar');
+    if(!lang || !toolbar || toolbar.contains(lang)) return;
+    lang.classList.add('battle-lang-bar');
+    toolbar.appendChild(lang);
   }
 
   async function startTurn(){
@@ -2972,7 +2982,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const handReserve = window.innerWidth < 720 ? 160 : 118;
     const availableH = Math.max(300, window.innerHeight - wrapRect.top - handReserve);
     const fitted = Math.min(availableW / BOARD_VIEW.width, availableH / BOARD_VIEW.height);
-    const preferredMin = window.innerWidth >= 1500 ? 0.68 : window.innerWidth >= 1000 ? 0.58 : window.innerWidth >= 720 ? 0.48 : 0.32;
+    const preferredMin = window.innerWidth >= 1500 ? 0.56 : window.innerWidth >= 1000 ? 0.52 : window.innerWidth >= 720 ? 0.46 : 0.32;
     const fit = Math.max(preferredMin, fitted);
     setBoardZoom(fit, true);
   }
