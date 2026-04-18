@@ -272,6 +272,19 @@
         death: { file: 'assets/sprites/samurai/hurt.png', frames: 4, duration: 800 }
       }
     },
+    'midnight-slash': {
+      frameWidth: 200, frameHeight: 200, scale: 0.94, footOffset: 64,
+      animations: {
+        idle: { file: 'assets/sprites/midnight-slash/idle.png', frames: 8, duration: 980, loop: true },
+        run: { file: 'assets/sprites/midnight-slash/run.png', frames: 8, duration: 680, loop: true },
+        attack: { file: 'assets/sprites/midnight-slash/attack.png', frames: 6, duration: 520 },
+        attackHeavy: { file: 'assets/sprites/midnight-slash/attack-heavy.png', frames: 6, duration: 620 },
+        attackCombo: { file: 'assets/sprites/midnight-slash/attack-heavy.png', frames: 6, duration: 660 },
+        cast: { file: 'assets/sprites/midnight-slash/attack-heavy.png', frames: 6, duration: 620 },
+        hurt: { file: 'assets/sprites/midnight-slash/hurt.png', frames: 4, duration: 340 },
+        death: { file: 'assets/sprites/midnight-slash/death.png', frames: 6, duration: 860 }
+      }
+    },
     'severed-fang': {
       frameWidth: 128, frameHeight: 128, scale: 1.18, footOffset: 42,
       animations: {
@@ -286,7 +299,7 @@
       }
     },
     'evil-wizard': {
-      frameWidth: 140, frameHeight: 140, scale: 1.1, footOffset: 44,
+      frameWidth: 140, frameHeight: 140, scale: 1.0, footOffset: 52,
       animations: {
         idle: { file: 'assets/sprites/evil-wizard/idle.png', frames: 10, duration: 1050, loop: true },
         run: { file: 'assets/sprites/evil-wizard/run.png', frames: 8, duration: 760, loop: true },
@@ -299,7 +312,7 @@
       }
     },
     'blind-huntress': {
-      frameWidth: 120, frameHeight: 128, scale: 1.18, footOffset: 42,
+      frameWidth: 120, frameHeight: 128, scale: 1.34, footOffset: 52,
       animations: {
         idle: { file: 'assets/sprites/blind-huntress/idle.png', frames: 24, duration: 1150, loop: true },
         run: { file: 'assets/sprites/blind-huntress/run.png', frames: 16, duration: 760, loop: true },
@@ -309,6 +322,19 @@
         cast: { file: 'assets/sprites/blind-huntress/cast.png', frames: 10, duration: 660 },
         hurt: { file: 'assets/sprites/blind-huntress/hurt.png', frames: 2, duration: 320 },
         death: { file: 'assets/sprites/blind-huntress/death.png', frames: 20, duration: 900 }
+      }
+    },
+    'blind-huntress-warrior': {
+      frameWidth: 160, frameHeight: 128, scale: 1.04, footOffset: 22, headOffset: 96,
+      animations: {
+        idle: { file: 'assets/sprites/blind-huntress-warrior/idle.png', frames: 24, duration: 1150, loop: true },
+        run: { file: 'assets/sprites/blind-huntress-warrior/run.png', frames: 16, duration: 760, loop: true },
+        attack: { file: 'assets/sprites/blind-huntress-warrior/attack.png', frames: 6, duration: 520 },
+        attackHeavy: { file: 'assets/sprites/blind-huntress-warrior/cast.png', frames: 10, duration: 660 },
+        attackCombo: { file: 'assets/sprites/blind-huntress-warrior/cast.png', frames: 10, duration: 700 },
+        cast: { file: 'assets/sprites/blind-huntress-warrior/cast.png', frames: 10, duration: 660 },
+        hurt: { file: 'assets/sprites/blind-huntress-warrior/hurt.png', frames: 2, duration: 320 },
+        death: { file: 'assets/sprites/blind-huntress-warrior/death.png', frames: 20, duration: 900 }
       }
     },
     'duskborne-elf': {
@@ -324,6 +350,19 @@
         death: { file: 'assets/sprites/duskborne-elf/death.png', frames: 8, duration: 860 }
       }
     },
+    'huntress-2': {
+      frameWidth: 100, frameHeight: 100, scale: 1.72, footOffset: 32,
+      animations: {
+        idle: { file: 'assets/sprites/huntress-2/idle.png', frames: 10, duration: 950, loop: true },
+        run: { file: 'assets/sprites/huntress-2/run.png', frames: 8, duration: 650, loop: true },
+        attack: { file: 'assets/sprites/huntress-2/attack.png', frames: 6, duration: 520 },
+        attackHeavy: { file: 'assets/sprites/huntress-2/attack.png', frames: 6, duration: 600 },
+        attackCombo: { file: 'assets/sprites/huntress-2/attack.png', frames: 6, duration: 640 },
+        cast: { file: 'assets/sprites/huntress-2/attack.png', frames: 6, duration: 560 },
+        hurt: { file: 'assets/sprites/huntress-2/hurt.png', frames: 3, duration: 320 },
+        death: { file: 'assets/sprites/huntress-2/death.png', frames: 10, duration: 860 }
+      }
+    },
     'duskborne-demonkin': {
       frameWidth: 128, frameHeight: 128, scale: 1.16, footOffset: 42,
       animations: {
@@ -335,6 +374,19 @@
         cast: { file: 'assets/sprites/duskborne-demonkin/cast.png', frames: 12, duration: 700 },
         hurt: { file: 'assets/sprites/duskborne-demonkin/hurt.png', frames: 4, duration: 360 },
         death: { file: 'assets/sprites/duskborne-demonkin/death.png', frames: 8, duration: 860 }
+      }
+    },
+    'blue-witch': {
+      frameWidth: 104, frameHeight: 64, scale: 2.72, footOffset: 18, headOffset: 92,
+      animations: {
+        idle: { file: 'assets/sprites/blue-witch/idle.png', frames: 9, duration: 980, loop: true },
+        run: { file: 'assets/sprites/blue-witch/run.png', frames: 12, duration: 680, loop: true },
+        attack: { file: 'assets/sprites/blue-witch/attack.png', frames: 9, duration: 620 },
+        attackHeavy: { file: 'assets/sprites/blue-witch/attack.png', frames: 9, duration: 700 },
+        attackCombo: { file: 'assets/sprites/blue-witch/attack.png', frames: 9, duration: 740 },
+        cast: { file: 'assets/sprites/blue-witch/cast.png', frames: 5, duration: 620 },
+        hurt: { file: 'assets/sprites/blue-witch/hurt.png', frames: 3, duration: 320 },
+        death: { file: 'assets/sprites/blue-witch/death.png', frames: 15, duration: 900 }
       }
     },
     'battle-maid': {
@@ -351,7 +403,7 @@
       }
     },
     'priest-knight': {
-      frameWidth: 100, frameHeight: 64, scale: 1.65, footOffset: 18,
+      frameWidth: 100, frameHeight: 64, scale: 1.5, footOffset: 20,
       animations: {
         idle: { file: 'assets/sprites/priest-knight/idle.png', frames: 4, duration: 850, loop: true },
         run: { file: 'assets/sprites/priest-knight/run.png', frames: 7, duration: 620, loop: true },
@@ -364,7 +416,7 @@
       }
     },
     'fire-warrior': {
-      frameWidth: 144, frameHeight: 80, scale: 1.55, footOffset: 24,
+      frameWidth: 144, frameHeight: 80, scale: 1.45, footOffset: 28,
       animations: {
         idle: { file: 'assets/sprites/fire-warrior/idle.png', frames: 8, duration: 1050, loop: true },
         run: { file: 'assets/sprites/fire-warrior/run.png', frames: 8, duration: 760, loop: true },
@@ -377,7 +429,7 @@
       }
     },
     ninja: {
-      frameWidth: 50, frameHeight: 37, scale: 3.05, footOffset: 12,
+      frameWidth: 50, frameHeight: 37, scale: 3.15, footOffset: 14,
       animations: {
         idle: { file: 'assets/sprites/ninja/idle.png', frames: 4, duration: 850, loop: true },
         run: { file: 'assets/sprites/ninja/run.png', frames: 6, duration: 560, loop: true },
@@ -390,7 +442,7 @@
       }
     },
     'countess-vampire': {
-      frameWidth: 128, frameHeight: 128, scale: 1.1, footOffset: 42,
+      frameWidth: 128, frameHeight: 128, scale: 1.18, footOffset: 64,
       animations: {
         idle: { file: 'assets/sprites/countess-vampire/idle.png', frames: 5, duration: 950, loop: true },
         run: { file: 'assets/sprites/countess-vampire/run.png', frames: 6, duration: 680, loop: true },
@@ -417,15 +469,15 @@
     }
   };
   const PROFESSION_SPRITE_PROFILES = {
-    warrior: 'severed-fang',
+    warrior: 'blind-huntress-warrior',
     mage: 'evil-wizard',
     rogue: 'ninja',
     priest: 'priest-knight',
     shaman: 'fire-warrior',
     necro: 'countess-vampire',
-    warlock: 'duskborne-demonkin',
-    swordsman: 'samurai',
-    hunter: 'duskborne-elf',
+    warlock: 'blue-witch',
+    swordsman: 'midnight-slash',
+    hunter: 'huntress-2',
     monk: 'gothic-monk',
     '武僧': 'gothic-monk'
   };
@@ -1499,6 +1551,20 @@
     return weaponPresentation(player).anim || 'attack';
   }
 
+  function basicProjectileFor(player){
+    const presentation = weaponPresentation(player);
+    const basic = getActiveBasicAttack(player);
+    if(presentation.kind === 'wand') return 'fire';
+    if(presentation.kind === 'bow' || Number(basic?.range || 1) > 1) return 'arrow';
+    return '';
+  }
+
+  function triggerBasicAttackVisual(player, target){
+    const projectile = basicProjectileFor(player);
+    if(!projectile || !player?.pos || !target?.pos) return;
+    triggerSkillProjectileFx(projectile, player.pos, target.pos);
+  }
+
   function hasSpriteAnim(player, anim){
     const profile = spriteProfileFor(player);
     return !!(profile && profile.animations && profile.animations[anim]);
@@ -2531,7 +2597,8 @@ async function applyRewardList(player, rewards, labelPrefix){
     if(p.buffs.nextBasicDie) dmg += await showDice('额外骰', resolvePlayerNotation(p, p.buffs.nextBasicDie));
     if(p.professionKey==='rogue' && isControlled(target)) dmg += await showDice('盗贼被动', '1d4');
     if(p.professionKey==='hunter' && target.marked){ dmg += 2; target.marked = false; log(`${p.label} 的猎人被动触发，追加 2 伤害并移除标记。`); }
-    const damageResult = dealDamage(p, target, dmg, { sourceName: b.name || '普通攻击', anim: weaponAttackAnim(p) });
+    triggerBasicAttackVisual(p, target);
+    const damageResult = dealDamage(p, target, dmg, { sourceName: b.name || '普通攻击', anim: weaponAttackAnim(p), spell: weaponPresentation(p).kind === 'wand' });
     if(!damageResult.dodged) applySourceOnHitEffects(p, target, b, b.name || '普通攻击', { includeBasicPassive: true });
     p.turn.basicSpent += 1;
     p.buffs.nextBasicFlat = 0; p.buffs.nextBasicDie = null; p.buffs.swordBonusStored = false;
@@ -3340,15 +3407,40 @@ async function applyRewardList(player, rewards, labelPrefix){
     return frame;
   }
 
+  function appendUnitHealthBar(g, p, x, y){
+    const width = 72;
+    const height = 10;
+    const pct = Math.max(0, Math.min(1, Number(p.hp || 0) / Math.max(1, Number(p.maxHp || 1))));
+    const frameX = x - width / 2;
+    addSvg(g, 'rect', { x: frameX + 5, y: y + 3, width: width - 10, height: height - 5, class:'unit-hpbar-bg' });
+    addSvg(g, 'rect', { x: frameX + 5, y: y + 3, width: Math.max(0, (width - 10) * pct), height: height - 5, class:'unit-hpbar-fill' });
+    addSvg(g, 'image', {
+      href: 'assets/ui/dragon-hpbar.png',
+      x: frameX,
+      y,
+      width,
+      height,
+      class:'unit-hpbar-frame',
+      preserveAspectRatio:'none'
+    });
+    const hpText = document.createElementNS(svgNS, 'text');
+    setSvgAttrs(hpText, { x, y: y + 8, 'text-anchor': 'middle', class: 'unit-hpbar-text' });
+    hpText.textContent = `${p.hp}/${p.maxHp}`;
+    g.appendChild(hpText);
+  }
+
   function appendUnitLabels(g, p, x, nameY, hpY){
     const name = document.createElementNS(svgNS, 'text');
     setSvgAttrs(name, { x, y: nameY, 'text-anchor': 'middle', class: 'unit-nameplate' });
     name.textContent = `P${p.id} ${I18N().entity('profession', p.professionKey, p.profession.name)}`;
     g.appendChild(name);
 
+    appendUnitHealthBar(g, p, x, hpY);
+    if(p.block <= 0) return;
+
     const plate = document.createElementNS(svgNS, 'text');
-    setSvgAttrs(plate, { x, y: hpY, 'text-anchor': 'middle', class: 'unit-hpplate' });
-    plate.textContent = `HP ${p.hp} / 护 ${p.block}`;
+    setSvgAttrs(plate, { x, y: hpY + 22, 'text-anchor': 'middle', class: 'unit-hpplate' });
+    plate.textContent = `护 ${p.block}`;
     g.appendChild(plate);
   }
 
@@ -3421,6 +3513,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const frameCount = Math.max(1, Number(anim.frames || 1));
     const duration = Number(anim.duration || 600);
     const footOffset = Number(profile.footOffset ?? (profile.frameHeight === 96 ? 18 : 20));
+    const headOffset = Number(profile.headOffset ?? (displayH - footOffset));
 
     const g = document.createElementNS(svgNS, 'g');
     setSvgAttrs(g, {
@@ -3452,15 +3545,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     });
     g.appendChild(body);
 
-    if(animName === 'cast'){
-      const aura = document.createElementNS(svgNS, 'circle');
-      setSvgAttrs(aura, { cx: x, cy: y - 48, r: 34, class: 'pixel-cast-aura' });
-      g.insertBefore(aura, shadow.nextSibling);
-    }
+    if(p.marked) appendMarkFx(g, x, y - headOffset - 38);
 
-    if(p.marked) appendMarkFx(g, x, y - displayH + footOffset - 42);
-
-    appendUnitLabels(g, p, x, y - displayH + footOffset - 6, y + 38);
+    appendUnitLabels(g, p, x, y - headOffset - 10, y - headOffset + 1);
     svg.appendChild(g);
     return true;
   }
@@ -3514,18 +3601,9 @@ async function applyRewardList(player, rewards, labelPrefix){
     addPixelRect(g, bx + 4*s, by + 17*s, 4*s, 1*s, outline);
     addPixelRect(g, bx + 9*s, by + 17*s, 4*s, 1*s, outline);
 
-    if(anim === 'cast'){
-      const aura = document.createElementNS(svgNS, 'circle');
-      aura.setAttribute('cx', x);
-      aura.setAttribute('cy', y - 38);
-      aura.setAttribute('r', 30);
-      aura.setAttribute('class', 'pixel-cast-aura');
-      g.insertBefore(aura, shadow.nextSibling);
-    }
-
     if(p.marked) appendMarkFx(g, x, y - 112);
 
-    appendUnitLabels(g, p, x, y - 86, y + 38);
+    appendUnitLabels(g, p, x, y - 92, y - 80);
 
     svg.appendChild(g);
   }
@@ -3626,18 +3704,217 @@ async function applyRewardList(player, rewards, labelPrefix){
     }
   }
 
+  function wait(ms){
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function aiAverageDamage(value){
+    if(value === null || value === undefined || value === '') return 0;
+    if(typeof value === 'number') return value;
+    const raw = String(value).replace(/\s+/g, '');
+    if(/^[-+]?\d+(?:\.\d+)?$/.test(raw)) return Number(raw);
+    let total = 0;
+    let matched = false;
+    const diceRe = /([+-]?)(\d*)d(\d+)/gi;
+    let m;
+    while((m = diceRe.exec(raw))){
+      matched = true;
+      const sign = m[1] === '-' ? -1 : 1;
+      const count = Number(m[2] || 1);
+      const sides = Number(m[3] || 0);
+      total += sign * count * (sides + 1) / 2;
+    }
+    const cleaned = raw.replace(diceRe, '');
+    const flatRe = /([+-]?\d+(?:\.\d+)?)/g;
+    while((m = flatRe.exec(cleaned))) total += Number(m[1]);
+    return matched ? total : 0;
+  }
+
+  function aiCardDamageValue(player, cardDef, target){
+    const cfg = cardDef?.config || {};
+    let value = cfg.damage || cfg.baseDamage || 0;
+    let dmg = aiAverageDamage(resolvePlayerNotation(player, value));
+    if(cardDef?.template === 'bonus_if_target_marked' && target?.marked) dmg += Number(cfg.bonusDamage || 0);
+    if(cfg.conditionalBonus?.condition === 'target_controlled' && isControlled(target)) dmg += Number(cfg.conditionalBonus.bonusFlat || 0);
+    if(cfg.conditionalBonus?.condition === 'moved_this_turn' && player.turn?.movedDistance > 0) dmg += aiAverageDamage(resolvePlayerNotation(player, cfg.conditionalBonus.bonusDamage || 0));
+    if(cfg.conditionalBonus?.condition === 'target_hp_lte' && target?.hp <= Number(cfg.conditionalBonus.threshold || 0)) dmg += aiAverageDamage(resolvePlayerNotation(player, cfg.conditionalBonus.bonusDamage || 0));
+    return dmg;
+  }
+
+  function aiCardEntries(player){
+    const entries = [];
+    player.hand.forEach((handItem, index) => {
+      const cardDef = getCardDef(handItem.cardKey);
+      if(!cardDef || !cardCanBePlayed(player, handItem, cardDef)) return;
+      if(cardDef.template === 'dual_mode'){
+        (cardDef.config?.modes || []).forEach((mode, modeIndex) => {
+          const virtualCard = {
+            name: `${cardDef.name} · ${mode.name || `模式${modeIndex + 1}`}`,
+            source: handItem.origin,
+            template: mode.templateRef,
+            config: mode
+          };
+          if(cardCanBePlayed(player, handItem, virtualCard)) entries.push({ index, handItem, cardDef: virtualCard, baseCardDef: cardDef, modeIndex });
+        });
+      } else {
+        entries.push({ index, handItem, cardDef, baseCardDef: cardDef, modeIndex: -1 });
+      }
+    });
+    return entries;
+  }
+
+  function aiTargetTemplate(template){
+    return ['direct_damage','dash_hit','insert_negative_card_into_target_deck','mark_target_for_bonus','bonus_if_target_marked','consume_all_activated_tokens_for_burst','damage_then_multi_buff','damage_roll_grant_card'].includes(template);
+  }
+
+  function aiCardControlBonus(cardDef){
+    const cfg = cardDef?.config || {};
+    if(cfg.applyTemplate || cfg.applyConfig?.controlType || cfg.apply?.controlType) return 26;
+    if(cfg.applyConfig?.damagePerTick || cfg.apply?.damagePerTick) return 18;
+    return 0;
+  }
+
+  function aiSelfCardScore(player, cardDef){
+    const cfg = cardDef?.config || {};
+    let score = 0;
+    if(cardDef.template === 'summon_token_into_self_deck') score += 72;
+    if(cardDef.template === 'transform_basic_attack' && player.turn.basicSpent < 1 + (player.buffs.extraBasicCap || 0)) score += 68;
+    if(cardDef.template === 'grant_multiple_buffs') score += 58;
+    if(cardDef.template === 'self_buff'){
+      if(cfg.heal && player.hp < player.maxHp) score += 38 + Math.min(30, player.maxHp - player.hp);
+      if(cfg.block || cfg.gainBlock) score += 36;
+      if(cfg.buffBasic || cfg.bonusDie || cfg.basicAttackCapDelta) score += player.turn.basicSpent ? 18 : 54;
+      if(cfg.classSkillCapDelta || cfg.dodgeNext || cfg.counterDamage || cfg.healOnDamaged) score += 42;
+    }
+    if(cardDef.template === 'pay_life_draw_cards'){
+      const cost = Number(cfg.lifeCost || 0);
+      if(player.hp > cost + 10) score += 48 + Math.max(0, 5 - player.hand.length) * 4;
+    }
+    return score;
+  }
+
+  function aiTokenTile(player, enemy, cardDef){
+    let best = null;
+    let bestScore = -Infinity;
+    for(const tile of state.board){
+      if(getPlayerAt(tile) || isBlockedTile(tile) || getMapToken(tile) || state.traps.has(key(tile))) continue;
+      if(!withinTileRange(player, tile, cardDef)) continue;
+      let score = 60 - dist(tile, enemy.pos) * 5;
+      if(dist(tile, enemy.pos) <= 1) score += 35;
+      if(isSpikeDangerTile(tile) || isTokenDangerTile(tile)) score -= 80;
+      if(score > bestScore){ bestScore = score; best = tile; }
+    }
+    return best ? { tile: best, score: bestScore } : null;
+  }
+
+  function aiTeleportTile(player, enemy, cardDef){
+    let best = null;
+    let bestScore = -Infinity;
+    const basicRange = Number(getActiveBasicAttack(player).range || 1);
+    for(const tile of state.board){
+      if(getPlayerAt(tile) || isBlockedTile(tile)) continue;
+      if(!withinTileRange(player, tile, cardDef)) continue;
+      const d = dist(tile, enemy.pos);
+      let score = 20 - d * 3;
+      if(d <= basicRange) score += 45;
+      if(isSpikeDangerTile(tile) || isTokenDangerTile(tile)) score -= 90;
+      if(score > bestScore){ bestScore = score; best = tile; }
+    }
+    return best ? { tile: best, score: bestScore } : null;
+  }
+
+  function chooseAiCardAction(player, enemy){
+    let best = null;
+    for(const entry of aiCardEntries(player)){
+      const cardDef = entry.cardDef;
+      const template = cardDef.template;
+      if(aiTargetTemplate(template) && withinTargetRange(player, enemy, cardDef)){
+        const dmg = aiCardDamageValue(player, cardDef, enemy);
+        let score = 95 + dmg * 5 + aiCardControlBonus(cardDef);
+        if(enemy.hp <= dmg) score += 600;
+        if(template === 'mark_target_for_bonus') score += 36;
+        if(template === 'insert_negative_card_into_target_deck') score += 24;
+        if(!best || score > best.score) best = { type:'card', entry, target: enemy, score };
+      } else if(template === 'aoe' && withinTileRange(player, enemy.pos, cardDef)){
+        const dmg = aiCardDamageValue(player, cardDef, enemy);
+        let score = 90 + dmg * 5 + aiCardControlBonus(cardDef);
+        if(enemy.hp <= dmg) score += 600;
+        if(!best || score > best.score) best = { type:'card', entry, tile: enemy.pos, score };
+      } else if(template === 'create_map_token'){
+        const placement = aiTokenTile(player, enemy, cardDef);
+        if(placement && (!best || placement.score > best.score)) best = { type:'card', entry, tile: placement.tile, score: placement.score };
+      } else if(template === 'teleport' && !player.turn.move){
+        const move = aiTeleportTile(player, enemy, cardDef);
+        if(move && move.score > 45 && (!best || move.score > best.score)) best = { type:'card', entry, tile: move.tile, score: move.score };
+      } else if(['self_buff','grant_multiple_buffs','transform_basic_attack','summon_token_into_self_deck','pay_life_draw_cards'].includes(template)){
+        const score = aiSelfCardScore(player, cardDef);
+        if(score > 0 && (!best || score > best.score)) best = { type:'card', entry, score };
+      }
+    }
+    return best;
+  }
+
+  function chooseAiMove(player, enemy){
+    if(player.turn.move) return null;
+    let best = null;
+    const basic = getActiveBasicAttack(player);
+    const entries = aiCardEntries(player).filter(entry => aiTargetTemplate(entry.cardDef.template) || entry.cardDef.template === 'aoe');
+    for(const kk of getReachableTiles(player)){
+      const [q,r] = kk.split(',').map(Number);
+      const tile = { q, r };
+      let score = 80 - dist(tile, enemy.pos) * 5;
+      if(isSpikeDangerTile(tile) || isTokenDangerTile(tile) || state.traps.has(key(tile))) score -= 90;
+      const sim = Object.assign({}, player, { pos: tile });
+      if(dist(tile, enemy.pos) <= Number(basic.range || 1) && (!basic.straight || straight(tile, enemy.pos))) score += 55;
+      for(const entry of entries){
+        if(entry.cardDef.template === 'aoe'){
+          if(withinTileRange(sim, enemy.pos, entry.cardDef)) score += 45;
+        } else if(withinTargetRange(sim, enemy, entry.cardDef)){
+          score += 52 + aiCardDamageValue(player, entry.cardDef, enemy) * 2;
+        }
+      }
+      if(!best || score > best.score) best = { type:'move', tile, score };
+    }
+    return best;
+  }
+
+  async function executeAiAction(action){
+    const p = current();
+    if(!action || !p?.alive) return false;
+    if(action.type === 'card'){
+      await resolveCard(action.entry.index, action.entry.handItem, action.entry.cardDef, action.tile || null, action.target || null);
+      return true;
+    }
+    if(action.type === 'basic'){
+      await useBasicAttack(action.target);
+      return true;
+    }
+    if(action.type === 'move'){
+      p.turn.move = true;
+      p.turn.movedDistance = dist(p.pos, action.tile);
+      await movePlayerTo(p, action.tile, { duration: Math.min(640, Math.max(260, 160 * Math.max(1, dist(p.pos, action.tile)))), triggerDestinationEffects: true });
+      await applyMovementTriggeredPassives(p);
+      finishAfterAction();
+      return true;
+    }
+    return false;
+  }
+
   async function runAiTurn(){
     const p=current(); if(!p.alive || p.type!=='ai' || state.winner || state.pending?.type==='discard') return;
-    const enemy=enemyOf(p);
-    const playable = p.hand.map((h,i)=>({h,i,def:getCardDef(h.cardKey)})).filter(x=>x.def && cardCanBePlayed(p,x.h,x.def));
-    const direct = playable.find(x => ['direct_damage','dash_hit','insert_negative_card_into_target_deck'].includes(x.def.template) && withinTargetRange(p, enemy, x.def));
-    if(direct){ playCardFromHand(direct.i); setTimeout(()=>{ if(state.pending?.type==='card') resolveCard(state.pending.index,state.pending.handItem,state.pending.cardDef,null,enemy); }, 400); return; }
-    if(!p.turn.basicSpent && canBasicTarget(p,enemy)){ useBasicAttack(enemy); return; }
-    if(!p.turn.move){
-      const reachable=[...getReachableTiles(p)].map(s=>{const [q,r]=s.split(',').map(Number); return {q,r};}).sort((a,b)=>dist(a,enemy.pos)-dist(b,enemy.pos));
-      if(reachable[0]){ p.turn.move=true; p.turn.movedDistance=dist(p.pos,reachable[0]); await movePlayerTo(p, reachable[0]); enterTile(p); await applyMovementTriggeredPassives(p); finishAfterAction(); return; }
+    for(let step = 0; step < 6; step += 1){
+      const actor = current();
+      const enemy = enemyOf(actor);
+      if(!actor?.alive || actor.type !== 'ai' || !enemy?.alive || state.winner || state.pending?.type === 'discard') return;
+      let action = chooseAiCardAction(actor, enemy);
+      if(!action && actor.turn.basicSpent < 1 + (actor.buffs.extraBasicCap || 0) && canBasicTarget(actor, enemy)) action = { type:'basic', target: enemy, score: 80 + aiAverageDamage(resolvePlayerNotation(actor, getActiveBasicAttack(actor).damage)) * 3 };
+      if(!action) action = chooseAiMove(actor, enemy);
+      if(!action) break;
+      const acted = await executeAiAction(action);
+      if(!acted || state.winner || state.pending?.type === 'discard') return;
+      await wait(360);
     }
-    endTurn();
+    if(current()?.type === 'ai' && !state.winner && state.pending?.type !== 'discard') endTurn();
   }
 
   function endTurn(){

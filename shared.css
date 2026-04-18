@@ -282,7 +282,7 @@ body.game-theme{
 .game-theme .tile text{font-size:13px;font-weight:800;fill:#f9edc5;paint-order:stroke;stroke:#080a08;stroke-width:4px}
 .map-component-layer,.map-component{pointer-events:none}
 .map-component-shadow{fill:rgba(0,0,0,.42)}
-.spike-floor-sprite,.black-hole-fx,.center-trap-image,.magic-trap-image,.arrow-trap-image,.mark-fx-image,.summon-sprite-image,.arrow-projectile,.fire-hit-fx-image,.fire-projectile-image,.lightning-fx-image,.skill-fx-image,.skill-projectile-image{image-rendering:pixelated}
+.spike-floor-sprite,.black-hole-fx,.center-trap-image,.magic-trap-image,.arrow-trap-image,.mark-fx-image,.summon-sprite-image,.arrow-projectile,.fire-hit-fx-image,.fire-projectile-image,.lightning-fx-image,.skill-fx-image,.skill-projectile-image,.unit-hpbar-frame{image-rendering:pixelated}
 .spike-floor-sprite{filter:drop-shadow(0 4px 0 rgba(0,0,0,.35)) drop-shadow(0 0 7px rgba(255,86,86,.32))}
 .obelisk-sprite-frame{overflow:hidden;filter:drop-shadow(0 6px 0 rgba(0,0,0,.42)) drop-shadow(0 0 10px rgba(0,235,255,.24))}
 .obelisk-shadow{fill:rgba(0,0,0,.5)}
@@ -354,7 +354,7 @@ body.game-theme{
 .game-theme #battle-log-panel{
   right:calc(var(--battle-stage-left) + 14px);
   top:auto;
-  bottom:calc(var(--card-h,292px) + 96px);
+  bottom:calc(var(--card-h,292px) + 18px);
   width:300px;
   min-height:0;
   max-height:178px;
@@ -578,7 +578,11 @@ body.game-theme{
 .pixel-unit-shadow{fill:rgba(0,0,0,.42)}
 .unit-nameplate{font-size:15px;font-weight:800;fill:#f4ead0;paint-order:stroke;stroke:#070907;stroke-width:4px}
 .unit-hpplate{font-size:13px;font-weight:700;fill:#dfe7d6;paint-order:stroke;stroke:#070907;stroke-width:4px}
-.pixel-cast-aura{fill:rgba(119,184,207,.11);stroke:rgba(119,184,207,.66);stroke-width:2;stroke-dasharray:5 4}
+.unit-hpbar-bg{fill:rgba(10,5,5,.82);stroke:rgba(0,0,0,.72);stroke-width:1}
+.unit-hpbar-fill{fill:#d94a38}
+.unit-hpbar-frame{opacity:.9;filter:drop-shadow(0 1px 0 rgba(0,0,0,.72))}
+.unit-hpbar-text{font-size:8px;font-weight:800;fill:#fff2d2;paint-order:stroke;stroke:#080a08;stroke-width:2px}
+.pixel-cast-aura{display:none}
 .pixel-unit-idle{animation:pixel-idle 950ms steps(2,end) infinite}
 .pixel-unit-attack{animation:pixel-attack 420ms steps(4,end)}
 .pixel-unit-p2.pixel-unit-attack{animation-name:pixel-attack-left}
