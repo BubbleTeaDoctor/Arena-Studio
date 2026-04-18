@@ -390,7 +390,7 @@
       }
     },
     'blue-witch': {
-      frameWidth: 104, frameHeight: 64, scale: 2.72, footOffset: 18, headOffset: 92,
+      frameWidth: 96, frameHeight: 96, scale: 1.42, footOffset: 10, headOffset: 92,
       animations: {
         idle: { file: 'assets/sprites/blue-witch/idle.png', frames: 9, duration: 980, loop: true },
         run: { file: 'assets/sprites/blue-witch/run.png', frames: 12, duration: 680, loop: true },
