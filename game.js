@@ -259,6 +259,19 @@
         death: { file: 'assets/sprites/knight-rose/death.png', frames: 10, duration: 900 }
       }
     },
+    warrior: {
+      frameWidth: 96, frameHeight: 80, scale: 1.42, footOffset: 8, headOffset: 86,
+      animations: {
+        idle: { file: 'assets/sprites/warrior/idle.png', frames: 6, duration: 880, loop: true },
+        run: { file: 'assets/sprites/warrior/run.png', frames: 8, duration: 620, loop: true },
+        attack: { file: 'assets/sprites/warrior/attack.png', frames: 12, duration: 620 },
+        attackHeavy: { file: 'assets/sprites/warrior/attack-heavy.png', frames: 10, duration: 660 },
+        attackCombo: { file: 'assets/sprites/warrior/attack.png', frames: 12, duration: 720 },
+        cast: { file: 'assets/sprites/warrior/attack-heavy.png', frames: 10, duration: 660 },
+        hurt: { file: 'assets/sprites/warrior/hurt.png', frames: 4, duration: 320 },
+        death: { file: 'assets/sprites/warrior/death.png', frames: 11, duration: 900 }
+      }
+    },
     samurai: {
       frameWidth: 96, frameHeight: 96, scale: 1.35,
       animations: {
@@ -469,7 +482,7 @@
     }
   };
   const PROFESSION_SPRITE_PROFILES = {
-    warrior: 'blind-huntress-warrior',
+    warrior: 'warrior',
     mage: 'evil-wizard',
     rogue: 'ninja',
     priest: 'priest-knight',
