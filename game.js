@@ -392,14 +392,14 @@
     'blue-witch': {
       frameWidth: 96, frameHeight: 96, scale: 1.42, footOffset: 10, headOffset: 92,
       animations: {
-        idle: { file: 'assets/sprites/blue-witch/idle.png', frames: 9, duration: 980, loop: true },
-        run: { file: 'assets/sprites/blue-witch/run.png', frames: 12, duration: 680, loop: true },
+        idle: { file: 'assets/sprites/blue-witch/idle.png', frames: 1, duration: 980, loop: false },
+        run: { file: 'assets/sprites/blue-witch/run.png', frames: 8, duration: 680, loop: true },
         attack: { file: 'assets/sprites/blue-witch/attack.png', frames: 9, duration: 620 },
         attackHeavy: { file: 'assets/sprites/blue-witch/attack.png', frames: 9, duration: 700 },
         attackCombo: { file: 'assets/sprites/blue-witch/attack.png', frames: 9, duration: 740 },
         cast: { file: 'assets/sprites/blue-witch/cast.png', frames: 5, duration: 620 },
         hurt: { file: 'assets/sprites/blue-witch/hurt.png', frames: 3, duration: 320 },
-        death: { file: 'assets/sprites/blue-witch/death.png', frames: 15, duration: 900 }
+        death: { file: 'assets/sprites/blue-witch/death.png', frames: 10, duration: 900 }
       }
     },
     'battle-maid': {
@@ -2609,7 +2609,6 @@ async function applyRewardList(player, rewards, labelPrefix){
     dmg += Number(p.buffs.nextBasicFlat || 0);
     if(p.buffs.nextBasicDie) dmg += await showDice('额外骰', resolvePlayerNotation(p, p.buffs.nextBasicDie));
     if(p.professionKey==='rogue' && isControlled(target)) dmg += await showDice('盗贼被动', '1d4');
-    if(p.professionKey==='hunter' && target.marked){ dmg += 2; target.marked = false; log(`${p.label} 的猎人被动触发，追加 2 伤害并移除标记。`); }
     triggerBasicAttackVisual(p, target);
     const damageResult = dealDamage(p, target, dmg, { sourceName: b.name || '普通攻击', anim: weaponAttackAnim(p), spell: weaponPresentation(p).kind === 'wand' });
     if(!damageResult.dodged) applySourceOnHitEffects(p, target, b, b.name || '普通攻击', { includeBasicPassive: true });
@@ -2847,16 +2846,20 @@ async function applyRewardList(player, rewards, labelPrefix){
         playUnitAnim(p, cardAnim, spriteAnimDuration(p, cardAnim, 520));
         triggerCardVisual(handItem.cardKey, cardDef, p, target);
         target.marked = true;
+        applySourceOnHitEffects(p, target, cardDef.config || {}, cardDef.name);
         log(`${p.label} 使用 ${cardDef.name} 标记了 ${target.label}。`);
         finishAfterAction();
         return;
       }
       let dmg = 0;
       if(cardDef.template==='bonus_if_target_marked'){
-        dmg = await showDice(cardDef.name, resolvePlayerNotation(p, cardDef.config.baseDamage || '1d6'));
+        dmg = await showDice(cardDef.name, resolvePlayerNotation(p, cardDef.config.baseDamage || cardDef.config.damage || '1d6'));
         if(target.marked){
-          dmg += Number(cardDef.config.bonusDamage || 0);
-          if(cardDef.config.consumeMark !== false) target.marked = false;
+          const bonus = cardDef.config.bonusDamage || 0;
+          dmg += (typeof bonus === 'string' && bonus.toLowerCase().includes('d'))
+            ? await showDice(`${cardDef.name} 标记追加`, resolvePlayerNotation(p, bonus))
+            : Number(bonus || 0);
+          if(cardDef.config.consumeMark === true || String(cardDef.config.consumeMark).toLowerCase() === 'true') target.marked = false;
         }
       } else if(cardDef.template==='consume_all_activated_tokens_for_burst'){
         dmg = await showDice(cardDef.name, resolvePlayerNotation(p, cardDef.config.baseDamage || '2d4'));
@@ -3421,12 +3424,12 @@ async function applyRewardList(player, rewards, labelPrefix){
   }
 
   function appendUnitHealthBar(g, p, x, y){
-    const width = 72;
-    const height = 10;
+    const width = 108;
+    const height = 18;
     const pct = Math.max(0, Math.min(1, Number(p.hp || 0) / Math.max(1, Number(p.maxHp || 1))));
     const frameX = x - width / 2;
-    addSvg(g, 'rect', { x: frameX + 5, y: y + 3, width: width - 10, height: height - 5, class:'unit-hpbar-bg' });
-    addSvg(g, 'rect', { x: frameX + 5, y: y + 3, width: Math.max(0, (width - 10) * pct), height: height - 5, class:'unit-hpbar-fill' });
+    addSvg(g, 'rect', { x: frameX + 8, y: y + 5, width: width - 16, height: height - 8, class:'unit-hpbar-bg' });
+    addSvg(g, 'rect', { x: frameX + 8, y: y + 5, width: Math.max(0, (width - 16) * pct), height: height - 8, class:'unit-hpbar-fill' });
     addSvg(g, 'image', {
       href: 'assets/ui/dragon-hpbar.png',
       x: frameX,
@@ -3437,7 +3440,7 @@ async function applyRewardList(player, rewards, labelPrefix){
       preserveAspectRatio:'none'
     });
     const hpText = document.createElementNS(svgNS, 'text');
-    setSvgAttrs(hpText, { x, y: y + 8, 'text-anchor': 'middle', class: 'unit-hpbar-text' });
+    setSvgAttrs(hpText, { x, y: y + 13, 'text-anchor': 'middle', class: 'unit-hpbar-text' });
     hpText.textContent = `${p.hp}/${p.maxHp}`;
     g.appendChild(hpText);
   }
@@ -3747,7 +3750,7 @@ async function applyRewardList(player, rewards, labelPrefix){
     const cfg = cardDef?.config || {};
     let value = cfg.damage || cfg.baseDamage || 0;
     let dmg = aiAverageDamage(resolvePlayerNotation(player, value));
-    if(cardDef?.template === 'bonus_if_target_marked' && target?.marked) dmg += Number(cfg.bonusDamage || 0);
+    if(cardDef?.template === 'bonus_if_target_marked' && target?.marked) dmg += aiAverageDamage(resolvePlayerNotation(player, cfg.bonusDamage || 0));
     if(cfg.conditionalBonus?.condition === 'target_controlled' && isControlled(target)) dmg += Number(cfg.conditionalBonus.bonusFlat || 0);
     if(cfg.conditionalBonus?.condition === 'moved_this_turn' && player.turn?.movedDistance > 0) dmg += aiAverageDamage(resolvePlayerNotation(player, cfg.conditionalBonus.bonusDamage || 0));
     if(cfg.conditionalBonus?.condition === 'target_hp_lte' && target?.hp <= Number(cfg.conditionalBonus.threshold || 0)) dmg += aiAverageDamage(resolvePlayerNotation(player, cfg.conditionalBonus.bonusDamage || 0));

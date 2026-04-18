@@ -417,7 +417,7 @@ body.game-theme{
   padding:clamp(72px,6vw,104px) 32px 16px;
   overflow:visible;
   scrollbar-width:thin;
-  pointer-events:auto;
+  pointer-events:none;
 }
 .game-theme .hand .card{
   position:relative;
@@ -432,6 +432,7 @@ body.game-theme{
   touch-action:manipulation;
   overflow:hidden;
   min-width:0;
+  pointer-events:auto;
 }
 .game-theme .hand .card:first-child{margin-left:0}
 .game-theme .hand .card.selected{
@@ -578,10 +579,10 @@ body.game-theme{
 .pixel-unit-shadow{fill:rgba(0,0,0,.42)}
 .unit-nameplate{font-size:15px;font-weight:800;fill:#f4ead0;paint-order:stroke;stroke:#070907;stroke-width:4px}
 .unit-hpplate{font-size:13px;font-weight:700;fill:#dfe7d6;paint-order:stroke;stroke:#070907;stroke-width:4px}
-.unit-hpbar-bg{fill:rgba(10,5,5,.82);stroke:rgba(0,0,0,.72);stroke-width:1}
+.unit-hpbar-bg{fill:rgba(10,5,5,.82);stroke:rgba(0,0,0,.72);stroke-width:1.2}
 .unit-hpbar-fill{fill:#d94a38}
 .unit-hpbar-frame{opacity:.9;filter:drop-shadow(0 1px 0 rgba(0,0,0,.72))}
-.unit-hpbar-text{font-size:8px;font-weight:800;fill:#fff2d2;paint-order:stroke;stroke:#080a08;stroke-width:2px}
+.unit-hpbar-text{font-size:10px;font-weight:800;fill:#fff2d2;paint-order:stroke;stroke:#080a08;stroke-width:2.5px}
 .pixel-cast-aura{display:none}
 .pixel-unit-idle{animation:pixel-idle 950ms steps(2,end) infinite}
 .pixel-unit-attack{animation:pixel-attack 420ms steps(4,end)}
